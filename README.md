@@ -4,12 +4,14 @@ Slim version of TiddlyWiki — empty file size is around 22 KB.
 
 ## Why
 
-* Git-diff friendly file format. Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), TiddlyWiki Slim uses an XML vault inside the DOM—similar to TiddlyWiki Classic, but improved
+* Git-diff friendly file format.
   * Saves notes at the beginning of the file; unmodified exports are byte-identical.
   * Export preserves note formatting and keeps notes sorted alphabetically (A-Z by title)
 * Barebone functionality: Notes (with title+content+update date), Recents, Search (title+content), Tags filter
 * Tags are auto-discovered from note content, sorted A-Z for filtering
 * Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
+
+Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), TiddlyWiki Slim uses an XML vault inside the DOM - similar to TiddlyWiki Classic, but improved.
 
 ## Tradeoffs
 * Absolute minimum options
