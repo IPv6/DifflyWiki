@@ -7,11 +7,12 @@ Slim version of TiddlyWiki.
 ## Why TiddlyWiki Slim
 
 * Git-diff friendly file format
- * All formatting is preserved, stable note order in export title+date, export is byte-identical
- * Notes are saved at the beginning of the file
- * Unlike TiddlyWiki5 and FeatherWiki (which use JSON strings to serialize content), TiddlyWiki Slim use XML vault inside DOM (somewhat similar to TiddlyWiki Classic, but better)
-* Barebone functionality: Note have title+content+update date, List of Tiddlers, basic search
-* Search filter (title+content), Tags filter, tags sorted A-Z
+  * All formatting is preserved, stable note order in export title+date, export is byte-identical
+  * Notes are saved at the beginning of the file
+  * Unlike TiddlyWiki5 and FeatherWiki (which use JSON strings to serialize content), TiddlyWiki Slim use XML vault inside DOM (somewhat similar to TiddlyWiki Classic, but better)
+* Barebone functionality: Notes (with title+content+update date), List of Tiddlers, Search
+* Tags auto-discovered from content, sorted A-Z for convenience
+* Search filter (title+content), Tags filter
 * Very slim - basically html file is your wiki content and 20kb of extra vanilla
 
 # Tradeoffs
@@ -35,5 +36,3 @@ Slim version of TiddlyWiki.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-Copyright (c) 2026 Yoon-seok Kim (Holo-Trekker).
