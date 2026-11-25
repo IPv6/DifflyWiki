@@ -1,8 +1,6 @@
 # TiddlyWiki Slim
 
-Slim version of TiddlyWiki.
-* Inspired by Teddy Wiki Lite from https://github.com/crystal-world-project/crystal-world
-* Original TiddlyWiki: https://github.com/TiddlyWiki/TiddlyWiki5
+Slim version of TiddlyWiki — empty file size is around 22 KB.
 
 ## Why TiddlyWiki Slim
 
@@ -13,7 +11,7 @@ Slim version of TiddlyWiki.
 * Barebone functionality: Notes (with title+content+update date), List of Tiddlers, Search
 * Tags auto-discovered from content, sorted A-Z for convenience
 * Search filter (title+content), Tags filter
-* Very slim - basically html file is your wiki content and 20kb of extra vanilla
+* Very slim - basically html file is your wiki content and minimum of vanilla js
 
 # Tradeoffs
 * Absolute minimum options
@@ -33,6 +31,10 @@ Slim version of TiddlyWiki.
 * Import: TW5 json, TW Classic file, TW Slim file
 * Export: TW5 json
 * Compatibility with [Tiddloid](https://github.com/donmor/Tiddloid)
+
+## Inspired by
+* Teddy Wiki Lite from https://github.com/crystal-world-project/crystal-world
+* TiddlyWiki: https://github.com/TiddlyWiki/TiddlyWiki5
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
