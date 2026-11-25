@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="UTF-8">
+  <script id="twslim-vault" type="application/xml">
+<vault version="1">
+  <note id="index" updated="2026-11-25T08:00:00Z">
+    <title>.index</title>
+    <content>
+# Start page of this wiki
+Link your main notes here.
+
+* [[Disclaimer]]
+</content>
+  </note>
+  <note id="disclaimer" updated="2026-11-25T09:00:00Z">
+    <title>Disclaimer</title>
+    <content>
+This is a **zero-dependency, single-file HTML wiki**
+
+---
+
+# Origins
+
+🌐 Source [GitHub](https://github.com/IPv6/TiddlyWikiSlim) #github
+🌐 Inspired by Wiki Lite from [crystal-world](https://github.com/crystal-world-project/crystal-world)
+🌐 Inspired by [TiddlyWiki](https://github.com/TiddlyWiki/TiddlyWiki5)
+</content>
+  </note>
+</vault>
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TiddlyWiki Slim</title>
+  <style>
+    :root {
+      --page: #f4f4f4;
+      --card: #ffffff;
+      --text: #333333;
+      --title: #182955;
+      --muted: #999999;
+      --faint: #bbbbbb;
+      --link: #5778d8;
+      --rule: #cccccc;
+      --tab: #e4e4e4;
+      --focus: #5778d8;
+      --side-col: 300px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      display: flex; align-items: flex-start; min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 15px; line-height: 1.5; background: var(--page); color: var(--text);
+    }
+    button { font: inherit; }
+
+    /* Story river: the note card */
+    #main { flex: 1; min-width: 0; padding: 40px 28px 40px 42px; }
+    .tiddler {
+      background: var(--card); border-radius: 2px; padding: 42px 56px 48px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+    }
+    .tiddler-head { display: flex; align-items: flex-start; gap: 16px; }
+    .tiddler-sub { color: var(--faint); margin: 2px 0 22px; min-height: 1.5em; }
+    .title-input {
+      flex: 1; min-width: 0; background: transparent; outline: none;
+      font: inherit; font-size: 2.35em; line-height: 1.25; font-weight: 400; color: var(--title);
+      border: 1px solid transparent; border-radius: 3px; padding: 0 8px; margin-left: -9px;
+    }
+    .title-input[readonly] { cursor: default; }
+    /* Edit mode: framed like the content editor */
+    .title-input:not([readonly]) { background: #fff; border-color: var(--rule); }
+    .title-input:not([readonly]):focus { border-color: var(--focus); }
+    .tiddler-controls { display: flex; gap: 6px; padding-top: 6px; }
+
+    /* Icon buttons (pencil, trash, plus, check) */
+    .icon-btn {
+      background: none; border: none; cursor: pointer; padding: 4px; line-height: 0;
+      color: var(--faint); border-radius: 3px;
+    }
+    .icon-btn:hover { color: #666; }
+    .icon-btn svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    #edit-btn .ic-done { display: none; }
+    #edit-btn.editing .ic-edit { display: none; }
+    #edit-btn.editing .ic-done { display: inline; }
+
+    #viewer { font-size: 1.05em; line-height: 1.65; overflow-wrap: anywhere; }
+    #viewer h1 { font-size: 1.6em; font-weight: 400; color: var(--title); line-height: 1.3; }
+    #viewer h2 { font-size: 1.3em; font-weight: 400; color: var(--title); line-height: 1.3; }
+    #viewer h1 + br, #viewer h2 + br, #viewer hr + br { display: none; } /* block already ends the line */
+    #viewer hr { border: none; border-top: 1px solid #999; margin: 0.6em 0; }
+    #editor {
+      display: none; width: 100%; min-height: 420px; resize: vertical;
+      font: 13.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--text);
+      background: #fff; border: 1px solid var(--rule); border-radius: 3px; padding: 10px 12px; outline: none;
+    }
+    #editor:focus { border-color: var(--focus); }
+
+    .wiki-link, .ext-link { color: var(--link); text-decoration: none; cursor: pointer; }
+    .wiki-link:hover, .ext-link:hover { text-decoration: underline; }
+    .wiki-tag {
+      display: inline-block; font-size: 0.85em; line-height: 1.4; padding: 0 8px; border-radius: 10px;
+      background: var(--tab); color: #555;
+    }
+
+    .footer { color: var(--faint); font-size: 0.8em; margin-top: 14px; padding-left: 4px; }
+
+    /* Sidebar */
+    #sidebar {
+      width: calc(var(--side-col) + 42px); flex-shrink: 0; position: sticky; top: 0; max-height: 100vh;
+      display: flex; flex-direction: column; padding: 36px 28px 24px 14px; color: #666;
+    }
+    /* One shared column: controls, tags, search and list all end at the same right edge */
+    #sidebar > * { width: 100%; max-width: var(--side-col); }
+    #sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); } /* offsets its -4px left margin */
+    .page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; }
+    .export-btn { background: none; border: none; cursor: pointer; padding: 4px 0; font-size: 0.95em; color: var(--muted); }
+    .export-btn:hover { color: var(--text); }
+    .export-btn.dirty { color: #d23c3c; }
+    .export-btn.dirty:hover { color: #a82020; }
+    .page-controls .icon-btn svg { width: 32px; height: 32px; color: #999; }
+
+    #search {
+      font: inherit; font-size: 0.85em; color: var(--text); background: #fff;
+      border: 1px solid var(--rule); border-radius: 4px; padding: 3px 7px; outline: none; margin-bottom: 10px;
+    }
+    #search:focus { border-color: var(--focus); box-shadow: 0 0 0 2px rgba(87, 120, 216, 0.35); }
+
+    .tag-cloud { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+    .tag-none { font-size: 0.85em; color: var(--muted); }
+    .tag-reset { font-size: 1.15em; line-height: 1; padding: 0 4px; color: var(--muted); cursor: pointer; user-select: none; }
+    .tag-reset:hover { color: var(--text); }
+    .tag-btn {
+      font-size: 0.85em; padding: 1px 9px; border-radius: 10px; cursor: pointer; user-select: none;
+      background: var(--tab); color: #555; border: 1px solid transparent;
+    }
+    .tag-btn:hover { border-color: var(--rule); }
+    .tag-btn.active { background: var(--link); color: #fff; }
+
+    #note-list {
+      list-style: none; overflow-y: auto; flex: 1; min-height: 0;
+      border-left: 1px solid var(--rule); padding-left: 28px;
+    }
+    #note-list li { font-size: 1.15em; line-height: 1.75; cursor: pointer; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #note-list li:hover { color: var(--link); }
+    #note-list li.active { color: var(--link); }
+
+    /* Narrow screens: sidebar goes below the note, like a single column */
+    @media (max-width: 900px) {
+      body { flex-direction: column; align-items: stretch; }
+      #main { flex: none; padding: 16px; }
+      .tiddler { padding: 24px 20px 28px; }
+      .title-input { font-size: 1.9em; }
+      #sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; }
+      #note-list { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <main id="main">
+    <div class="tiddler">
+      <div class="tiddler-head">
+        <input type="text" id="title-input" class="title-input" placeholder="Title" readonly="" oninput="saveCurrentNote()">
+        <div class="tiddler-controls">
+          <button id="edit-btn" class="icon-btn" title="Edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
+          <button class="icon-btn" title="Delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
+        </div>
+      </div>
+      <div class="tiddler-sub" id="note-sub"></div>
+
+      <textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." oninput="saveCurrentNote()"></textarea>
+      <div id="viewer"></div>
+    </div>
+
+    <div class="footer">© 2026 TiddlyWiki Slim. MIT License</div>
+  </main>
+
+  <aside id="sidebar">
+    <div class="page-controls">
+      <button class="icon-btn" title="New note" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
+      <button id="export-btn" class="export-btn" title="Download this wiki as HTML" onclick="downloadSelf()">Export</button>
+    </div>
+
+    <input type="text" id="search" placeholder="Search" oninput="renderList()">
+
+    <div class="tag-cloud" id="tag-cloud"></div>
+
+    <ul id="note-list"></ul>
+  </aside>
+
+  <script>
+    // ==========================================================================
+    // VAULT (the page is its own database)
+    // Notes live as XML text inside <script id="twslim-vault" type="application/xml">,
+    // placed at the top of <head> right after <meta charset> (the charset tag must
+    // stay within the first 1024 bytes, or browsers may guess the encoding wrong).
+    // Script content is raw text to the HTML parser, so it round-trips byte-for-byte
+    // through outerHTML; every "<" and "&" in note data is entity-escaped, so the
+    // data can never contain "</script".
+    // ==========================================================================
+    const VAULT_ID = 'twslim-vault';
+    const DEFAULT_FILENAME = 'slim-wiki.html';
+
+    // Snapshot of the page taken before any rendering (see init at the bottom).
+    // Exports are built from it, so runtime DOM (list items, viewer HTML,
+    // inline styles) never leaks into the file, and the vault keeps its place.
+    let pristineRoot = null;
+
+    function childText(el, name) {
+      const c = Array.from(el.children).find(e => e.localName === name);
+      return c ? c.textContent : '';
+    }
+
+    function loadVault(el) {
+      const xml = new DOMParser().parseFromString(el.textContent.trim(), 'application/xml');
+      const err = xml.getElementsByTagName('parsererror')[0];
+      if (err) throw new Error('Vault XML is malformed: ' + err.textContent);
+      return Array.from(xml.documentElement.children)
+        .filter(e => e.localName === 'note')
+        .map(n => ({
+          id: n.getAttribute('id'),
+          updated: n.getAttribute('updated') || '',
+          title: childText(n, 'title'),
+          content: childText(n, 'content').trim()
+        }));
+    }
+
+    function xmlEscape(s, attr) {
+      s = String(s)
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\r/g, '&#13;'); // the XML parser would otherwise fold \r into \n
+      return attr ? s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;') : s;
+    }
+
+    // Stable file order: title A→Z (case-insensitive), then newest "updated" first,
+    // then id. Plain code-point comparison, not localeCompare, so every browser
+    // and system locale writes the same order.
+    const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+    function fileOrder(a, b) {
+      return cmp(a.title.toLowerCase(), b.title.toLowerCase())
+        || cmp(a.title, b.title)
+        || (Date.parse(b.updated) || 0) - (Date.parse(a.updated) || 0)
+        || cmp(a.id, b.id);
+    }
+
+    // Canonical form: loading this and serializing again yields the identical string.
+    // Content goes on its own lines; it is trimmed here and on load, so stray
+    // leading/trailing whitespace from the editor can't make exports drift.
+    function serializeVault(notes) {
+      return '\n<vault version="1">\n' + [...notes].sort(fileOrder).map(n =>
+        `  <note id="${xmlEscape(n.id, true)}" updated="${xmlEscape(n.updated || '', true)}">\n` +
+        `    <title>${xmlEscape(n.title)}</title>\n` +
+        `    <content>\n${xmlEscape(n.content.trim())}\n</content>\n` +
+        `  </note>\n`).join('') + '</vault>\n  ';
+    }
+
+    // Name of the file currently open (file:// or http path), sanitized; else a default.
+    function exportFilename(loc = location) {
+      let name = '';
+      if (/^(file|https?):$/.test(loc.protocol)) {
+        try { name = decodeURIComponent(loc.pathname.split('/').pop() || ''); } catch (e) { name = ''; }
+      }
+      name = name
+        .replace(/[<>:"\/\\|?*\x00-\x1F\x7F]/g, '_') // invalid on Windows/macOS/Linux
+        .replace(/^[\s.]+|[\s.]+$/g, '')              // no leading/trailing dots or spaces
+        .slice(0, 200);
+      if (!name || /^_*$/.test(name)) return DEFAULT_FILENAME;
+      if (!/\.html?$/i.test(name)) name += '.html';
+      if (/^(con|prn|aux|nul|com\d|lpt\d)(\.|$)/i.test(name)) name = '_' + name; // Windows reserved
+      return name;
+    }
+
+    function buildExportHtml() {
+      const root = pristineRoot.cloneNode(true);
+      root.querySelector('#' + VAULT_ID).textContent = serializeVault(db);
+      return '<!DOCTYPE html>\n' + root.outerHTML;
+    }
+
+    // ==========================================================================
+    // CORE STATE (Set for Multi-Tag Selection)
+    // ==========================================================================
+    let db = loadVault(document.getElementById(VAULT_ID));
+
+    // Unsaved-changes tracking: the set of (id, updated) pairs as of the last
+    // load/export. Any edit, new note or deletion changes it, and Export turns red.
+    const changeSignature = () => db.map(n => n.id + '\u0000' + n.updated).sort().join('\n');
+    let savedSignature = changeSignature(); // taken before .index may be auto-created
+
+    // "updated" is stored as ISO 8601 UTC, e.g. 2026-11-25T21:40:00Z
+    const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+    const timeOf = n => Date.parse(n.updated) || 0;
+    const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
+
+    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+                    'August', 'September', 'October', 'November', 'December'];
+    // "29th January 2025 at 9:14pm", in local time
+    function formatUpdated(iso) {
+      const d = new Date(iso);
+      if (!iso || isNaN(d)) return '';
+      const day = d.getDate();
+      const sfx = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[day % 10] || 'th');
+      const hh = d.getHours() % 12 || 12, mm = String(d.getMinutes()).padStart(2, '0');
+      return `${day}${sfx} ${MONTHS[d.getMonth()]} ${d.getFullYear()} at ${hh}:${mm}${d.getHours() < 12 ? 'am' : 'pm'}`;
+    }
+
+    // ".index" is the start page: always opened on load, and recreated on load
+    // if missing. It is otherwise a normal note (rename/delete freely).
+    const INDEX_TITLE = '.index';
+    function ensureIndexNote() {
+      let note = db.find(n => n.title === INDEX_TITLE);
+      if (!note) {
+        note = { id: 'note_' + Date.now(), updated: nowIso(), title: INDEX_TITLE,
+                 content: '# Index\n\nStart page of this wiki. Link your main notes here.' };
+        db.unshift(note);
+      }
+      return note;
+    }
+
+    let currentId = ensureIndexNote().id;
+    let selectedTags = new Set();
+    let isEditing = false;
+
+    const listEl = document.getElementById('note-list');
+    const tagCloudEl = document.getElementById('tag-cloud');
+    const titleEl = document.getElementById('title-input');
+    const editorEl = document.getElementById('editor');
+    const viewerEl = document.getElementById('viewer');
+    const subEl = document.getElementById('note-sub');
+    const exportBtn = document.getElementById('export-btn');
+
+    function parseMarkdown(text) {
+      if (!text) return "";
+      return text
+        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^\* (.*$)/gim, '• $1')
+        .replace(/^---$/gm, '<hr>')
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank" class="ext-link">$1</a>')
+        .replace(/(#[a-zA-Z0-9가-힣]+)/g, '<span class="wiki-tag">$1</span>')
+        .replace(/\[\[(.*?)\]\]/g, (m, target) => `<span class="wiki-link" onclick="navigateTo('${target}')">${target}</span>`)
+        .replace(/\n/g, '<br>');
+    }
+
+    function loadNote(id) {
+      currentId = id;
+      const note = db.find(n => n.id === id);
+      if (!note) return;
+
+      titleEl.value = note.title;
+      editorEl.value = note.content;
+      subEl.textContent = formatUpdated(note.updated);
+      viewerEl.innerHTML = parseMarkdown(note.content);
+      renderList();
+    }
+
+    function toggleTagFilter(tag) {
+      if (selectedTags.has(tag)) {
+        selectedTags.delete(tag);
+      } else {
+        selectedTags.add(tag);
+      }
+      renderList();
+    }
+
+    function resetTags() {
+      selectedTags.clear();
+      renderList();
+    }
+
+    function renderList() {
+      const search = document.getElementById('search').value.toLowerCase();
+      listEl.innerHTML = "";
+      
+      const allTags = new Set();
+      db.forEach(n => (n.content.match(/(#[a-zA-Z0-9가-힣]+)/g) || []).forEach(t => allTags.add(t)));
+      
+      tagCloudEl.innerHTML = "";
+      [...allTags].sort((a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b)).forEach(tag => {
+        const btn = document.createElement('span');
+        const isActive = selectedTags.has(tag);
+        btn.className = `tag-btn ${isActive ? 'active' : ''}`;
+        btn.textContent = tag;
+        btn.onclick = () => toggleTagFilter(tag);
+        tagCloudEl.appendChild(btn);
+      });
+      if (allTags.size) {
+        const x = document.createElement('span');
+        x.className = 'tag-reset';
+        x.textContent = '×';
+        x.title = 'Clear tag filter';
+        x.onclick = resetTags;
+        tagCloudEl.appendChild(x);
+      } else {
+        tagCloudEl.innerHTML = '<span class="tag-none">Tags: none</span>';
+      }
+
+      byRecent().filter(n => {
+        const matchSearch = n.title.toLowerCase().includes(search) || n.content.toLowerCase().includes(search);
+        const noteTags = n.content.match(/(#[a-zA-Z0-9가-힣]+)/g) || [];
+        const matchTags = Array.from(selectedTags).every(st => noteTags.includes(st));
+
+        return matchSearch && matchTags;
+      }).forEach(note => {
+        const li = document.createElement('li');
+        li.className = note.id === currentId ? 'active' : '';
+        li.innerHTML = `<span>${note.title}</span>`;
+        li.onclick = () => loadNote(note.id);
+        listEl.appendChild(li);
+      });
+      updateExportState(); // every change path ends in renderList()
+    }
+
+    const hasUnsavedChanges = () => changeSignature() !== savedSignature;
+
+    // Browser's own "Leave page?" prompt (its text can't be customised).
+    window.addEventListener('beforeunload', e => {
+      if (hasUnsavedChanges()) { e.preventDefault(); e.returnValue = ''; }
+    });
+
+    function updateExportState() {
+      const dirty = hasUnsavedChanges();
+      exportBtn.classList.toggle('dirty', dirty);
+      exportBtn.title = dirty ? 'Unsaved changes: download this wiki as HTML' : 'Download this wiki as HTML';
+    }
+
+    function saveCurrentNote() {
+      const note = db.find(n => n.id === currentId);
+      if (note) {
+        note.title = titleEl.value;
+        note.content = editorEl.value;
+        note.updated = nowIso();
+        subEl.textContent = formatUpdated(note.updated);
+        viewerEl.innerHTML = parseMarkdown(note.content);
+        renderList();
+      }
+    }
+
+    function toggleEdit() {
+      isEditing = !isEditing;
+      editorEl.style.display = isEditing ? 'block' : 'none';
+      viewerEl.style.display = isEditing ? 'none' : 'block';
+      const editBtn = document.getElementById('edit-btn');
+      editBtn.classList.toggle('editing', isEditing); // swaps pencil / check icon via CSS
+      editBtn.title = isEditing ? 'Done' : 'Edit';
+      titleEl.readOnly = !isEditing;
+      if (isEditing) editorEl.focus();
+    }
+
+    function createNewNote() {
+      const newNote = { id: 'note_' + Date.now(), updated: nowIso(), title: 'Untitled Tiddler', content: '# New Note\n\nStart writing... #draft' };
+      db.unshift(newNote);
+      loadNote(newNote.id);
+      if (!isEditing) toggleEdit();
+    }
+
+    function deleteCurrentNote() {
+      const note = db.find(n => n.id === currentId);
+      if (!note) return;
+      if (db.length <= 1) return alert('Cannot delete the last note.');
+      if (!confirm(`Delete note "${note.title || 'Untitled'}"?`)) return;
+      db = db.filter(n => n.id !== currentId);
+      loadNote(byRecent()[0].id);
+    }
+
+    function navigateTo(title) {
+      let target = db.find(n => n.title.toLowerCase() === title.toLowerCase());
+      if (!target) {
+        target = { id: 'note_' + Date.now(), updated: nowIso(), title: title, content: `# ${title}\n\nCreated via WikiLink.` };
+        db.unshift(target);
+      }
+      loadNote(target.id);
+    }
+
+    function downloadSelf() {
+      const blob = new Blob([buildExportHtml()], { type: "text/html" });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = exportFilename();
+      document.body.appendChild(a); // some Firefox/Safari versions ignore clicks on detached links
+      a.click();
+      a.remove();
+      savedSignature = changeSignature();
+      updateExportState();
+    }
+
+    // Wait for the parser to finish so the snapshot includes everything after
+    // this script (whitespace, any markup added below), then render.
+    document.addEventListener('DOMContentLoaded', () => {
+      pristineRoot = document.documentElement.cloneNode(true);
+      loadNote(currentId);
+    });
+  </script>
+  
+</body></html>
