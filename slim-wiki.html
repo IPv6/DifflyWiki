@@ -3,6 +3,7 @@
   <meta charset="UTF-8">
   <script id="twslim-vault" type="application/xml">
 <vault version="1">
+
 <note id="index" updated="2026-11-25T08:00:00Z">
 <title>.index</title>
 <content>
@@ -12,6 +13,7 @@ Link your main notes here
 * [[Disclaimer]]
 </content>
 </note>
+
 <note id="disclaimer" updated="2026-11-25T09:00:00Z">
 <title>Disclaimer</title>
 <content>
@@ -26,6 +28,7 @@ This is a **zero-dependency, single-file HTML wiki**
 🌐 Inspired by [TiddlyWiki](https://github.com/TiddlyWiki/TiddlyWiki5)
 </content>
 </note>
+
 </vault>
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -246,11 +249,11 @@ This is a **zero-dependency, single-file HTML wiki**
     // Content goes on its own lines; it is trimmed here and on load, so stray
     // leading/trailing whitespace from the editor can't make exports drift.
     function serializeVault(notes) {
-      return '\n<vault version="1">\n' + [...notes].sort(fileOrder).map(n =>
+      return '\n<vault version="1">\n\n' + [...notes].sort(fileOrder).map(n =>
         `<note id="${xmlEscape(n.id, true)}" updated="${xmlEscape(n.updated || '', true)}">\n` +
         `<title>${xmlEscape(n.title)}</title>\n` +
         `<content>\n${xmlEscape(n.content.trim())}\n</content>\n` +
-        `</note>\n`).join('') + '</vault>\n  ';
+        `</note>\n\n`).join('') + '</vault>\n  ';
     }
 
     // Name of the file currently open (file:// or http path), sanitized; else a default.
