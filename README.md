@@ -16,11 +16,11 @@ Slim version of TiddlyWiki.
 * Very slim - basically html file is your wiki content and 20kb of extra vanilla
 
 # Tradeoffs
+* Absolute minimum options
 * File export only
 * Basic markdown only
 * Default theming only (TiddlyWiki5-like)
-* Start note ".index"
-* Absolute minimum options
+* Start note hardcoded to ".index" note
 * No plugins, no addons. Just hack the source.
 
 # What's next
@@ -29,7 +29,7 @@ Slim version of TiddlyWiki.
 
 # Soon
 
-* Barebone visits history for fast navigation
+* Visits history block, for fast navigation (instead of story river)
 * Import: TW5 json, TW Classic file, TW Slim file
 * Export: TW5 json
 * Compatibility with [Tiddloid](https://github.com/donmor/Tiddloid)
