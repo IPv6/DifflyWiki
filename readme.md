@@ -29,7 +29,8 @@ Slim version of TiddlyWiki.
 # Soon
 
 * Barebone visits history for fast navigation
-* Import TW5 json, TW Classic file, TW Slim, export TW5 json
+* Import: TW5 json, TW Classic file, TW Slim file
+* Export: TW5 json
 * Compatibility with [Tiddloid](https://github.com/donmor/Tiddloid)
 
 ## License
