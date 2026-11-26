@@ -164,6 +164,12 @@ Link your main notes here
     .settings label.wide { flex-direction: column; align-items: stretch; gap: 3px; }
     .settings input[type="text"] { width: 100%; height: 1.8em; padding: 0 4px; }
     .settings .hint { color: var(--muted); }
+    .settings .io { display: flex; gap: 8px; margin-top: 2px; }
+    .settings .io button {
+      flex: 1; padding: 3px 6px; cursor: pointer; color: var(--text);
+      background: var(--page); border: 1px solid var(--rule); border-radius: 4px;
+    }
+    .settings .io button:hover { border-color: var(--focus); }
     .settings select, .settings input { font: inherit; }
     /* Dropdowns and the number box share one width, so the right column lines up */
     .settings select, .settings input[type="number"] { width: 8.5em; height: 1.8em; flex: none; }
@@ -251,7 +257,12 @@ Link your main notes here
       <label class="wide"><span data-l10n="dateFormat">Date format</span>
         <input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint"></label>
       <div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
+      <div class="io">
+        <button type="button" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
+        <button type="button" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
+      </div>
     </form>
+    <input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)">
 
     <input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
 
@@ -306,6 +317,10 @@ Link your main notes here
       dateFormat: 'Date format',
       dateFormatHint: 'Browser default',
       formatHelp: 'Placeholders: {YYYY} {MM} {DD} {H} {M} {S}',
+      importJson: 'Import JSON',
+      exportJson: 'Export JSON',
+      importDone: 'Imported: {added} new, {replaced} replaced, {skipped} skipped',
+      importFailed: 'Import failed: {error}',
     };
 
     // t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
@@ -459,16 +474,65 @@ Link your main notes here
       return '<!DOCTYPE html>\n' + root.outerHTML;
     }
 
-    function downloadSelf() {
-      const blob = new Blob([buildExportHtml()], { type: "text/html" });
+    function download(blob, filename) {
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = exportFilename();
+      a.download = filename;
       document.body.appendChild(a); // some Firefox/Safari versions ignore clicks on detached links
       a.click();
       a.remove();
+    }
+
+    function downloadSelf() {
+      download(new Blob([buildExportHtml()], { type: 'text/html' }), exportFilename());
       savedSignature = changeSignature();
       updateExportState();
+    }
+
+    // === TW5 JSON IMPORT/EXPORT ===
+    // TiddlyWiki 5 format: an array of { text, title, modified, created, ... } with
+    // dates as "YYYYMMDDHHmmssSSS" in UTC. We add "id"; imports replace notes by id.
+    const toTw5Date = iso => { const d = new Date(iso); return iso && !isNaN(d) ? d.toISOString().replace(/\D/g, '').slice(0, 17) : ''; };
+    function fromTw5Date(s) {
+      const m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{3})?$/.exec(String(s || ''));
+      return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : '';
+    }
+
+    function exportJson() {
+      const tiddlers = [...db].sort(fileOrder).map(n => {
+        const tw = { text: n.content, title: n.title };
+        if (toTw5Date(n.updated)) tw.modified = toTw5Date(n.updated);
+        tw.id = n.id;
+        return tw;
+      });
+      download(new Blob([JSON.stringify(tiddlers, null, 4) + '\n'], { type: 'application/json' }),
+               exportFilename().replace(/\.html?$/i, '.json'));
+    }
+
+    function importJsonFile(input) {
+      const file = input.files[0];
+      input.value = ''; // so the same file can be picked again
+      if (file) file.text().then(importJson).catch(e => alert(t('importFailed', { error: e.message })));
+    }
+
+    function importJson(text) {
+      const data = JSON.parse(text);
+      let added = 0, replaced = 0, skipped = 0;
+      (Array.isArray(data) ? data : [data]).forEach(tw => {
+        // TW5 system tiddlers ("$:/...") are settings/plugins, not notes
+        if (!tw || typeof tw.title !== 'string' || tw.title.startsWith('$:/')) { skipped++; return; }
+        const note = {
+          id: typeof tw.id === 'string' && tw.id ? tw.id : newId(),
+          updated: fromTw5Date(tw.modified) || fromTw5Date(tw.created) || nowIso(),
+          title: tw.title,
+          content: String(tw.text ?? '').trim()
+        };
+        const at = db.findIndex(n => n.id === note.id);
+        if (at >= 0) { db[at] = note; replaced++; } else { db.push(note); added++; }
+      });
+      if (added + replaced) savedSignature = null; // a replaced note may keep its date: still unsaved
+      loadNote(db.some(n => n.id === currentId) ? currentId : (db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
+      alert(t('importDone', { added, replaced, skipped }));
     }
 
     // === CORE STATE ===
@@ -481,6 +545,13 @@ Link your main notes here
     let savedSignature = changeSignature(); // taken before .index may be auto-created
 
     // "updated" is stored as ISO 8601 UTC, e.g. 2026-11-25T21:40:00Z
+    // Unique note id, e.g. note_1764160000000_k3j9x
+    function newId() {
+      let id;
+      do id = 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+      while (db.some(n => n.id === id));
+      return id;
+    }
     const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
     const timeOf = n => Date.parse(n.updated) || 0;
     const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
@@ -748,7 +819,7 @@ Link your main notes here
     }
 
     function createNewNote() {
-      const newNote = { id: 'note_' + Date.now(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()), content: t('newNoteContent') };
+      const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()), content: t('newNoteContent') };
       db.unshift(newNote);
       loadNote(newNote.id);
       if (!isEditing) toggleEdit();
@@ -768,7 +839,7 @@ Link your main notes here
     function navigateTo(title) {
       let target = db.find(n => n.title.toLowerCase() === title.toLowerCase());
       if (!target) {
-        target = { id: 'note_' + Date.now(), updated: nowIso(), title: title, content: t('linkNoteContent', { title }) };
+        target = { id: newId(), updated: nowIso(), title: title, content: t('linkNoteContent', { title }) };
         db.unshift(target);
       }
       loadNote(target.id);

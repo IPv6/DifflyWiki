@@ -9,6 +9,7 @@ Slim version of TiddlyWiki — empty file size is around 22 KB.
   * Export preserves note formatting and keeps notes sorted alphabetically (A-Z by title)
 * Barebone functionality: Notes (with title+content+update date), Recents, Visits history, Search (title+content), Tags filter
 * Barebone Tags support. Tags are auto-discovered from note content, sorted A-Z for filtering
+* Import/Export in TW5 json format
 * Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
 
 Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, TiddlyWiki Slim uses an XML vault. Similar to TiddlyWiki Classic, but improved.
@@ -36,8 +37,6 @@ Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, T
 
 # Soon
 
-* Import: TW5 json, TW Classic file
-* Export: TW5 json
 * Compatibility with [Tiddloid](https://github.com/donmor/Tiddloid)
 
 ## Inspired by
