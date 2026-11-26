@@ -18,12 +18,16 @@ Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), Ti
 * Basic settings only
 * Basic markdown only
 * Default theming only (TiddlyWiki5-like)
-* Index note with hardcoded id ".index"
 * No plugins, no addons, just hack the source
 
 # What's next
 
 * Download [empty Wiki](slim-wiki.html) and open in any browser
+
+## More details
+
+* Index note is the one with hardcoded id ".index". Recreated at start if not found
+* Localizable STRINGS collected in one place for easy localization
 
 # Soon
 

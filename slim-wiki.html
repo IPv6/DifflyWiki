@@ -174,28 +174,28 @@ Link your main notes here
   <main id="main">
     <div class="tiddler">
       <div class="tiddler-head">
-        <input type="text" id="title-input" class="title-input" placeholder="Title" readonly="" oninput="saveCurrentNote()">
+        <input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()">
         <div class="tiddler-controls">
-          <button id="edit-btn" class="icon-btn" title="Edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
-          <button class="icon-btn" title="Delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
+          <button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
+          <button class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
         </div>
       </div>
       <div class="tiddler-sub" id="note-sub"></div>
 
-      <textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." oninput="saveCurrentNote()"></textarea>
+      <textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"></textarea>
       <div id="viewer"></div>
     </div>
 
-    <div class="footer">© 2026 TiddlyWiki Slim. MIT License</div>
+    <div class="footer" data-l10n="footer">© 2026 TiddlyWiki Slim. MIT License</div>
   </main>
 
   <aside id="sidebar">
     <div class="page-controls">
-      <button class="icon-btn" title="New note" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
-      <button id="export-btn" class="export-btn" title="Download this wiki as HTML" onclick="downloadSelf()">Export</button>
+      <button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
+      <button id="export-btn" class="export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Export</button>
     </div>
 
-    <input type="text" id="search" placeholder="Search" oninput="renderList()">
+    <input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
 
     <div class="tag-cloud" id="tag-cloud"></div>
 
@@ -203,6 +203,52 @@ Link your main notes here
   </aside>
 
   <script>
+    // === UI STRINGS: translate here ===
+    // Every interface string lives in this one object. "{name}" marks a value
+    // filled in at runtime; keep it, but move it anywhere in the sentence.
+    // English text in the HTML below is only a fallback and is replaced on load.
+    const STRINGS = {
+      lang: 'en',
+      appTitle: 'TiddlyWiki Slim',
+      footer: '© 2026 TiddlyWiki Slim. MIT License',
+      titlePlaceholder: 'Title',
+      editorPlaceholder: 'Write markdown, #tags, and [[WikiLinks]]...',
+      searchPlaceholder: 'Search',
+      edit: 'Edit',
+      done: 'Done',
+      delete: 'Delete',
+      newNote: 'New note',
+      export: 'Export',
+      exportHint: 'Download this wiki as HTML',
+      exportHintDirty: 'Unsaved changes: download this wiki as HTML',
+      clearTags: 'Clear tag filter',
+      noTags: 'Tags will be shown here',
+      confirmDelete: 'Delete note "{title}"?',
+      cannotDeleteLast: 'Cannot delete the last note.',
+      untitled: 'Untitled',
+      newNoteTitle: 'Untitled Tiddler',
+      newNoteContent: '# New Note\n\nStart writing... #draft',
+      linkNoteContent: '# {title}\n\nCreated via WikiLink.',
+      indexTitle: 'Index',
+      indexContent: '# Start page of this wiki\nLink your main notes here',
+    };
+
+    // t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
+    const t = (key, vars = {}) =>
+      (STRINGS[key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+
+    // Fills HTML marked with data-l10n (text), data-l10n-title, data-l10n-placeholder.
+    // Runs after the export snapshot is taken, so saved files keep the keys, not the text.
+    function applyStrings() {
+      document.documentElement.lang = STRINGS.lang;
+      document.title = t('appTitle');
+      document.querySelectorAll('[data-l10n]').forEach(el => { el.textContent = t(el.dataset.l10n); });
+      for (const attr of ['title', 'placeholder']) {
+        document.querySelectorAll(`[data-l10n-${attr}]`)
+          .forEach(el => el.setAttribute(attr, t(el.getAttribute(`data-l10n-${attr}`))));
+      }
+    }
+
     // === VAULT (the page is its own database) ===
     // Notes live as XML text inside <script id="twslim-vault" type="application/xml">,
     // placed at the top of <head> right after <meta charset> (the charset tag must
@@ -326,8 +372,7 @@ Link your main notes here
     function ensureIndexNote() {
       let note = db.find(n => n.id === INDEX_ID);
       if (!note) {
-        note = { id: INDEX_ID, updated: nowIso(), title: 'Index',
-                 content: '# Start page of this wiki\nLink your main notes here' };
+        note = { id: INDEX_ID, updated: nowIso(), title: t('indexTitle'), content: t('indexContent') };
         db.unshift(note);
       }
       return note;
@@ -406,11 +451,14 @@ Link your main notes here
         const x = document.createElement('span');
         x.className = 'tag-reset';
         x.textContent = '×';
-        x.title = 'Clear tag filter';
+        x.title = t('clearTags');
         x.onclick = resetTags;
         tagCloudEl.appendChild(x);
       } else {
-        tagCloudEl.innerHTML = '<span class="tag-none">Tags will be shown here</span>';
+        const none = document.createElement('span');
+        none.className = 'tag-none';
+        none.textContent = t('noTags');
+        tagCloudEl.appendChild(none);
       }
 
       byRecent().filter(n => {
@@ -439,7 +487,7 @@ Link your main notes here
     function updateExportState() {
       const dirty = hasUnsavedChanges();
       exportBtn.classList.toggle('dirty', dirty);
-      exportBtn.title = dirty ? 'Unsaved changes: download this wiki as HTML' : 'Download this wiki as HTML';
+      exportBtn.title = t(dirty ? 'exportHintDirty' : 'exportHint');
     }
 
     function saveCurrentNote() {
@@ -460,13 +508,13 @@ Link your main notes here
       viewerEl.style.display = isEditing ? 'none' : 'block';
       const editBtn = document.getElementById('edit-btn');
       editBtn.classList.toggle('editing', isEditing); // swaps pencil / check icon via CSS
-      editBtn.title = isEditing ? 'Done' : 'Edit';
+      editBtn.title = t(isEditing ? 'done' : 'edit');
       titleEl.readOnly = !isEditing;
       if (isEditing) editorEl.focus();
     }
 
     function createNewNote() {
-      const newNote = { id: 'note_' + Date.now(), updated: nowIso(), title: 'Untitled Tiddler', content: '# New Note\n\nStart writing... #draft' };
+      const newNote = { id: 'note_' + Date.now(), updated: nowIso(), title: t('newNoteTitle'), content: t('newNoteContent') };
       db.unshift(newNote);
       loadNote(newNote.id);
       if (!isEditing) toggleEdit();
@@ -475,8 +523,8 @@ Link your main notes here
     function deleteCurrentNote() {
       const note = db.find(n => n.id === currentId);
       if (!note) return;
-      if (db.length <= 1) return alert('Cannot delete the last note.');
-      if (!confirm(`Delete note "${note.title || 'Untitled'}"?`)) return;
+      if (db.length <= 1) return alert(t('cannotDeleteLast'));
+      if (!confirm(t('confirmDelete', { title: note.title || t('untitled') }))) return;
       db = db.filter(n => n.id !== currentId);
       // Next: the index note if it still exists, else the most recently updated one
       loadNote((db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
@@ -485,7 +533,7 @@ Link your main notes here
     function navigateTo(title) {
       let target = db.find(n => n.title.toLowerCase() === title.toLowerCase());
       if (!target) {
-        target = { id: 'note_' + Date.now(), updated: nowIso(), title: title, content: `# ${title}\n\nCreated via WikiLink.` };
+        target = { id: 'note_' + Date.now(), updated: nowIso(), title: title, content: t('linkNoteContent', { title }) };
         db.unshift(target);
       }
       loadNote(target.id);
@@ -495,6 +543,7 @@ Link your main notes here
     // this script (whitespace, any markup added below), then render.
     document.addEventListener('DOMContentLoaded', () => {
       pristineRoot = document.documentElement.cloneNode(true);
+      applyStrings();
       loadNote(currentId);
     });
   </script>
