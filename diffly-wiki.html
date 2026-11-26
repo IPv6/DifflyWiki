@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8">
+<html lang="en"><head><meta charset="UTF-8">
 <script id="diffly-vault" type="application/xml">
 <vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below" newTitle="{YYYY}-{MM}-{DD} Untitled" dateFormat="">
 
@@ -43,978 +42,887 @@ Link your main notes here
 </vault>
 </script>
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="application-name" content="DifflyWiki">
-  <title>DifflyWiki</title>
-  <style>
-    :root {
-      --page: #f4f4f4;
-      --card: #ffffff;
-      --text: #333333;
-      --title: #182955;
-      --muted: #999999;
-      --faint: #bbbbbb;
-      --link: #5778d8;
-      --rule: #cccccc;
-      --tab: #e4e4e4;
-      --focus: #5778d8;
-      --side-col: 300px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      display: flex; align-items: flex-start; min-height: 100vh;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      font-size: 15px; line-height: 1.5; background: var(--page); color: var(--text);
-    }
-    button { font: inherit; }
-
-    /* Story river: the note card */
-    #main { flex: 1; min-width: 0; padding: 40px 28px 40px 42px; }
-    .note {
-      background: var(--card); border-radius: 2px; padding: 42px 56px 48px;
-      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
-    }
-    .note-head { display: flex; align-items: flex-start; gap: 16px; }
-    .note-sub { color: var(--faint); margin: 2px 0 22px; min-height: 1.5em; }
-    .title-input {
-      flex: 1; min-width: 0; background: transparent; outline: none;
-      font: inherit; font-size: 2.35em; line-height: 1.25; font-weight: 400; color: var(--title);
-      border: 1px solid transparent; border-radius: 3px; padding: 0 8px; margin-left: -9px;
-    }
-    .title-input[readonly] { cursor: default; color: var(--muted); }
-    /* Edit mode: framed like the content editor. Both boxes sit 9px left of the
-       content edge (1px border + 8px padding), so their borders line up and the
-       text stays where it is in view mode. */
-    .title-input:not([readonly]) { background: #fff; border-color: var(--rule); }
-    .title-input:not([readonly]):focus { border-color: var(--focus); }
-    .note-controls { display: flex; gap: 6px; padding-top: 6px; }
-
-    /* Icon buttons (pencil, trash, plus, check) */
-    .icon-btn {
-      background: none; border: none; cursor: pointer; padding: 4px; line-height: 0;
-      color: var(--faint); border-radius: 3px;
-    }
-    .icon-btn:hover { color: #666; }
-    .icon-btn svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-    #edit-btn .ic-done { display: none; }
-    #edit-btn.editing .ic-edit { display: none; }
-    #edit-btn.editing .ic-done { display: inline; }
-
-    #viewer { font-size: 1.05em; line-height: 1.65; overflow-wrap: anywhere; }
-    #viewer h1 { font-size: 1.6em; font-weight: 400; color: var(--title); line-height: 1.3; }
-    #viewer h2 { font-size: 1.3em; font-weight: 400; color: var(--title); line-height: 1.3; }
-    #viewer h1 + br, #viewer h2 + br, #viewer hr + br { display: none; } /* block already ends the line */
-    #viewer hr { border: none; border-top: 1px solid #999; margin: 0.6em 0; }
-    #viewer code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em; background: #f2f2f2; border-radius: 3px; padding: 0.1em 0.35em; }
-    #viewer pre { background: #f6f6f6; border: 1px solid #e4e4e4; border-radius: 3px; padding: 8px 12px; margin: 0.3em 0; overflow-x: auto; line-height: 1.45; }
-    #viewer pre code { background: none; padding: 0; }
-    #viewer pre + br { display: none; } /* the block already ends the line */
-    #editor {
-      display: none; width: calc(100% + 18px); margin: 0 -9px; min-height: 420px; resize: vertical;
-      font: 13.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--text);
-      background: #fff; border: 1px solid var(--rule); border-radius: 3px; padding: 10px 8px; outline: none;
-    }
-    #editor:focus { border-color: var(--focus); }
-
-    .wiki-link, .ext-link { color: var(--link); text-decoration: none; cursor: pointer; }
-    .wiki-link:hover, .ext-link:hover { text-decoration: underline; }
-    .wiki-tag {
-      display: inline-block; font-size: 0.85em; line-height: 1.4; padding: 0 8px; border-radius: 10px;
-      background: var(--tab); color: #555;
-    }
-
-    .visits { margin-top: 14px; padding-left: 4px; font-size: 0.9em; line-height: 1.7; color: var(--muted); }
-    /* Above the note: one line exactly as tall as the sidebar's icon row (40px),
-       starting where it starts (sidebar top padding is 4px less than #main's),
-       so the card's top lines up with the settings panel / search below the icons */
-    .visits.above {
-      height: 40px; line-height: 40px; margin: -4px 0 14px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .visits .visit { color: var(--link); cursor: pointer; }
-    .visits .visit:hover { text-decoration: underline; }
-    .visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
-    .visits .sep { margin: 0 7px; color: var(--faint); }
-    .footer { flex: none; color: var(--faint); font-size: 0.8em; margin-top: 14px; } /* last in the sidebar, under the note list */
-
-    /* Sidebar */
-    #sidebar {
-      width: calc(var(--side-col) + 42px); flex-shrink: 0; position: sticky; top: 0; max-height: 100vh;
-      display: flex; flex-direction: column; padding: 36px 28px 24px 14px; color: #666;
-    }
-    /* One shared column: controls, tags, search and list all end at the same right edge */
-    #sidebar > * { width: 100%; max-width: var(--side-col); }
-    #sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); } /* offsets its -4px left margin */
-    .page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; min-height: 40px; }
-    /* Toast after saving: full-width stripe over everything at the top of the screen */
-    .save-toast {
-      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
-      padding: 10px 16px; text-align: center; font-weight: 600; cursor: pointer; /* tap to hide */
-      background: #fff; color: #2e9e44; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
-    }
-    /* Text buttons: Save, Import JSON, Export JSON */
-    .btn {
-      padding: 3px 10px; cursor: pointer; color: var(--text);
-      background: var(--page); border: 1px solid var(--rule); border-radius: 4px;
-    }
-    .btn:hover { border-color: var(--focus); }
-    .export-btn { font-size: 0.95em; }
-    .export-btn.dirty { color: #d23c3c; border-color: #d23c3c; }
-    .export-btn.dirty:hover { color: #a82020; border-color: #a82020; }
-    .page-controls .icon-btn svg { width: 32px; height: 32px; color: #999; }
-    .page-icons { display: flex; align-items: center; gap: 6px; }
-    #settings-btn svg { width: 25.6px; height: 25.6px; } /* 20% smaller than the + icon */
-    .page-icons .icon-btn.on svg { color: #555; }
-    [hidden] { display: none !important; } /* wins over display: flex/grid below */
-
-    /* Settings panel (gear) */
-    .settings {
-      display: grid; gap: 8px; margin: 0 0 14px; padding: 10px 12px; font-size: 0.85em;
-      background: #fff; border: 1px solid var(--rule); border-radius: 4px;
-    }
-    .settings label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .settings label.check { justify-content: flex-start; }
-    .settings label.wide { flex-direction: column; align-items: stretch; gap: 3px; }
-    .settings input[type="text"] { width: 100%; height: 1.8em; padding: 0 4px; }
-    .settings .hint { color: var(--muted); }
-    .settings .io { display: flex; gap: 8px; margin-top: 2px; }
-    .settings .io .btn { flex: 1; padding: 3px 6px; }
-    .settings select, .settings input { font: inherit; }
-    /* Dropdowns and the number box share one width, so the right column lines up */
-    .settings select, .settings input[type="number"] { width: 8.5em; height: 1.8em; flex: none; }
-    .settings input[type="number"] { padding: 0 4px; }
-
-    #search {
-      font: inherit; font-size: 0.85em; color: var(--text); background: #fff;
-      border: 1px solid var(--rule); border-radius: 4px; padding: 3px 7px; outline: none; margin-bottom: 10px;
-    }
-    #search:focus { border-color: var(--focus); box-shadow: 0 0 0 2px rgba(87, 120, 216, 0.35); }
-
-    .tag-cloud { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-    .tag-none { font-size: 0.85em; color: var(--muted); }
-    .tag-reset { font-size: 1.15em; line-height: 1; padding: 0 4px; color: var(--muted); cursor: pointer; user-select: none; }
-    .tag-reset:hover { color: var(--text); }
-    .tag-btn {
-      font-size: 0.85em; padding: 1px 9px; border-radius: 10px; cursor: pointer; user-select: none;
-      background: var(--tab); color: #555; border: 1px solid transparent;
-    }
-    .tag-btn:hover { border-color: var(--rule); }
-    .tag-btn.active { background: var(--link); color: #fff; }
-
-    #note-list {
-      list-style: none; overflow-y: auto; flex: 1; min-height: 0;
-      border-left: 1px solid var(--rule); padding-left: 28px;
-    }
-    #note-list li { font-size: 1.15em; line-height: 1.75; cursor: pointer; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    #note-list li:hover { color: var(--link); }
-    #note-list li.active { color: var(--link); }
-
-    /* Narrow screens: sidebar goes below the note, like a single column */
-    @media (max-width: 900px) {
-      body { flex-direction: column; align-items: stretch; }
-      #main { flex: none; padding: 16px; }
-      .note { padding: 24px 20px 28px; }
-      .title-input { font-size: 1.9em; }
-      #sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; align-items: center; } /* column centered below the note */
-      #note-list { max-height: none; }
-    }
-  </style>
+<title>DifflyWiki</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="application-name" content="DifflyWiki">
+<style>
+	:root { --page: #f4f4f4; --card: #ffffff; --text: #333333; --title: #182955; --muted: #999999; --faint: #bbbbbb; --link: #5778d8; --rule: #cccccc; --tab: #e4e4e4; --focus: #5778d8; --side-col: 300px; }
+	* { box-sizing: border-box; margin: 0; padding: 0; }
+	body { display: flex; align-items: flex-start; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; background: var(--page); color: var(--text); }
+	button { font: inherit; }
+	#main { flex: 1; min-width: 0; padding: 40px 28px 40px 42px; }
+	.note { background: var(--card); border-radius: 2px; padding: 42px 56px 48px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18); }
+	.note-head { display: flex; align-items: flex-start; gap: 16px; }
+	.note-sub { color: var(--faint); margin: 2px 0 22px; min-height: 1.5em; }
+	.title-input { flex: 1; min-width: 0; background: transparent; outline: none; font: inherit; font-size: 2.35em; line-height: 1.25; font-weight: 400; color: var(--title); border: 1px solid transparent; border-radius: 3px; padding: 0 8px; margin-left: -9px; }
+	.title-input[readonly] { cursor: default; color: var(--muted); }
+	.title-input:not([readonly]) { background: #fff; border-color: var(--rule); }
+	.title-input:not([readonly]):focus { border-color: var(--focus); }
+	.note-controls { display: flex; gap: 6px; padding-top: 6px; }
+	.icon-btn { background: none; border: none; cursor: pointer; padding: 4px; line-height: 0; color: var(--faint); border-radius: 3px; }
+	.icon-btn:hover { color: #666; }
+	.icon-btn svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+	#edit-btn .ic-done { display: none; }
+	#edit-btn.editing .ic-edit { display: none; }
+	#edit-btn.editing .ic-done { display: inline; }
+	#viewer { font-size: 1.05em; line-height: 1.65; overflow-wrap: anywhere; }
+	#viewer h1 { font-size: 1.6em; font-weight: 400; color: var(--title); line-height: 1.3; }
+	#viewer h2 { font-size: 1.3em; font-weight: 400; color: var(--title); line-height: 1.3; }
+	#viewer h1 + br, #viewer h2 + br, #viewer hr + br { display: none; }
+	#viewer hr { border: none; border-top: 1px solid #999; margin: 0.6em 0; }
+	#viewer code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em; background: #f2f2f2; border-radius: 3px; padding: 0.1em 0.35em; }
+	#viewer pre { background: #f6f6f6; border: 1px solid #e4e4e4; border-radius: 3px; padding: 8px 12px; margin: 0.3em 0; overflow-x: auto; line-height: 1.45; }
+	#viewer pre code { background: none; padding: 0; }
+	#viewer pre + br { display: none; }
+	#editor { display: none; width: calc(100% + 18px); margin: 0 -9px; min-height: 420px; resize: vertical; font: 13.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--text); background: #fff; border: 1px solid var(--rule); border-radius: 3px; padding: 10px 8px; outline: none; }
+	#editor:focus { border-color: var(--focus); }
+	.wiki-link, .ext-link { color: var(--link); text-decoration: none; cursor: pointer; }
+	.wiki-link:hover, .ext-link:hover { text-decoration: underline; }
+	.wiki-tag { display: inline-block; font-size: 0.85em; line-height: 1.4; padding: 0 8px; border-radius: 10px; background: var(--tab); color: #555; }
+	.visits { margin-top: 14px; padding-left: 4px; font-size: 0.9em; line-height: 1.7; color: var(--muted); }
+	.visits.above { height: 40px; line-height: 40px; margin: -4px 0 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	.visits .visit { color: var(--link); cursor: pointer; }
+	.visits .visit:hover { text-decoration: underline; }
+	.visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
+	.visits .sep { margin: 0 7px; color: var(--faint); }
+	.footer { flex: none; color: var(--faint); font-size: 0.8em; margin-top: 14px; }
+	#sidebar { width: calc(var(--side-col) + 42px); flex-shrink: 0; position: sticky; top: 0; max-height: 100vh; display: flex; flex-direction: column; padding: 36px 28px 24px 14px; color: #666; }
+	#sidebar > * { width: 100%; max-width: var(--side-col); }
+	#sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); }
+	.page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; min-height: 40px; }
+	.save-toast { position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; padding: 10px 16px; text-align: center; font-weight: 600; cursor: pointer; background: #fff; color: #2e9e44; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2); }
+	.btn { padding: 3px 10px; cursor: pointer; color: var(--text); background: var(--page); border: 1px solid var(--rule); border-radius: 4px; }
+	.btn:hover { border-color: var(--focus); }
+	.export-btn { font-size: 0.95em; }
+	.export-btn.dirty { color: #d23c3c; border-color: #d23c3c; }
+	.export-btn.dirty:hover { color: #a82020; border-color: #a82020; }
+	.page-controls .icon-btn svg { width: 32px; height: 32px; color: #999; }
+	.page-icons { display: flex; align-items: center; gap: 6px; }
+	#settings-btn svg { width: 25.6px; height: 25.6px; }
+	.page-icons .icon-btn.on svg { color: #555; }
+	[hidden] { display: none !important; }
+	.settings { display: grid; gap: 8px; margin: 0 0 14px; padding: 10px 12px; font-size: 0.85em; background: #fff; border: 1px solid var(--rule); border-radius: 4px; }
+	.settings label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+	.settings label.check { justify-content: flex-start; }
+	.settings label.wide { flex-direction: column; align-items: stretch; gap: 3px; }
+	.settings input[type="text"] { width: 100%; height: 1.8em; padding: 0 4px; }
+	.settings .hint { color: var(--muted); }
+	.settings .io { display: flex; gap: 8px; margin-top: 2px; }
+	.settings .io .btn { flex: 1; padding: 3px 6px; }
+	.settings select, .settings input { font: inherit; }
+	.settings select, .settings input[type="number"] { width: 8.5em; height: 1.8em; flex: none; }
+	.settings input[type="number"] { padding: 0 4px; }
+	#search { font: inherit; font-size: 0.85em; color: var(--text); background: #fff; border: 1px solid var(--rule); border-radius: 4px; padding: 3px 7px; outline: none; margin-bottom: 10px; }
+	#search:focus { border-color: var(--focus); box-shadow: 0 0 0 2px rgba(87, 120, 216, 0.35); }
+	.tag-cloud { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+	.tag-none { font-size: 0.85em; color: var(--muted); }
+	.tag-reset { font-size: 1.15em; line-height: 1; padding: 0 4px; color: var(--muted); cursor: pointer; user-select: none; }
+	.tag-reset:hover { color: var(--text); }
+	.tag-btn { font-size: 0.85em; padding: 1px 9px; border-radius: 10px; cursor: pointer; user-select: none; background: var(--tab); color: #555; border: 1px solid transparent; }
+	.tag-btn:hover { border-color: var(--rule); }
+	.tag-btn.active { background: var(--link); color: #fff; }
+	#note-list { list-style: none; overflow-y: auto; flex: 1; min-height: 0; border-left: 1px solid var(--rule); padding-left: 28px; }
+	#note-list li { font-size: 1.15em; line-height: 1.75; cursor: pointer; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+	#note-list li:hover { color: var(--link); }
+	#note-list li.active { color: var(--link); }
+	@media (max-width: 900px) {
+		body { flex-direction: column; align-items: stretch; }
+		#main { flex: none; padding: 16px; }
+		.note { padding: 24px 20px 28px; }
+		.title-input { font-size: 1.9em; }
+		#sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; align-items: center; }
+		#note-list { max-height: none; }
+	}
+</style>
 </head>
+
 <body>
-  <div class="save-toast" id="save-toast" data-l10n="saved" hidden="" onclick="hideSavedToast()">Saved successfully</div>
-
-  <main id="main">
-    <div class="note">
-      <div class="note-head">
-        <input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()">
-        <div class="note-controls">
-          <button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
-          <button id="delete-btn" class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
-          <button id="close-btn" class="icon-btn" title="Close" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
-        </div>
-      </div>
-      <div class="note-sub" id="note-sub"></div>
-
-      <textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"></textarea>
-      <div id="viewer"></div>
-    </div>
-
-    <div class="visits" id="visits"></div>
-  </main>
-
-  <aside id="sidebar">
-    <div class="page-controls">
-      <div class="page-icons">
-        <button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
-        <button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
-      </div>
-      <button id="export-btn" class="btn export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
-    </div>
-
-    <form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
-      <label class="check"><input type="checkbox" name="showTags"><span data-l10n="showTags">Show tags filter</span></label>
-      <label class="check"><input type="checkbox" name="showSearch"><span data-l10n="showSearch">Show search</span></label>
-      <label><span data-l10n="sortBy">Sort notes by</span>
-        <select name="sort"><option value="date" data-l10n="sortDate">Date</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
-      <label><span data-l10n="sortOrder">Order</span>
-        <select name="order"><option value="desc" data-l10n="orderDesc">Descending</option><option value="asc" data-l10n="orderAsc">Ascending</option></select></label>
-      <label><span data-l10n="visitsPlace">Recent visits</span>
-        <select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
-      <label><span data-l10n="visitsCap">Recent visits to keep</span>
-        <input type="number" name="visitsCap" min="1" max="100"></label>
-      <label class="wide"><span data-l10n="newTitleFormat">New note title</span>
-        <input type="text" name="newTitle"></label>
-      <label class="wide"><span data-l10n="dateFormat">Date format</span>
-        <input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint"></label>
-      <div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
-      <div class="io">
-        <button type="button" class="btn" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
-        <button type="button" class="btn" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
-      </div>
-    </form>
-    <input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)">
-
-    <input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
-
-    <div class="tag-cloud" id="tag-cloud"></div>
-
-    <ul id="note-list"></ul>
-
-    <div class="footer" data-l10n="footer">© 2026 DifflyWiki. MIT License</div>
-  </aside>
-
-  <script>
-    // === UI STRINGS: translate here ===
-    // Every interface string lives in this one object. "{name}" marks a value
-    // filled in at runtime; keep it, but move it anywhere in the sentence.
-    // English text in the HTML below is only a fallback and is replaced on load.
-    const STRINGS = {
-      lang: 'en',
-      appTitle: 'DifflyWiki',
-      footer: '© 2026 DifflyWiki. MIT License',
-      titlePlaceholder: 'Title',
-      editorPlaceholder: 'Write markdown, #tags, and [[WikiLinks]]...',
-      searchPlaceholder: 'Search',
-      edit: 'Edit',
-      done: 'Done',
-      delete: 'Delete',
-      close: 'Close',
-      newNote: 'New note',
-      export: 'Save',
-      exportHint: 'Download this wiki as HTML',
-      exportHintDirty: 'Unsaved changes: download this wiki as HTML',
-      clearTags: 'Clear tag filter',
-      noTags: 'Tags will be shown here',
-      confirmDelete: 'Delete note "{title}"?',
-      cannotDeleteLast: 'Cannot delete the last note.',
-      untitled: 'Untitled',
-      newNoteTitle: '{YYYY}-{MM}-{DD} Untitled', // default for the "New note title" setting
-      newNoteContent: '# New Note\n\nStart writing... #draft',
-      linkNoteContent: '# {title}\n\nCreated via WikiLink.',
-      indexTitle: 'Index',
-      indexContent: '# Start page of this wiki\nLink your main notes here',
-      settings: 'Settings',
-      sortBy: 'Sort notes by',
-      sortDate: 'Date',
-      sortTitle: 'Title',
-      sortOrder: 'Order',
-      orderDesc: 'Descending',
-      orderAsc: 'Ascending',
-      showTags: 'Show tags filter',
-      showSearch: 'Show search',
-      visitsCap: 'Recent visits to keep',
-      visitsPlace: 'Recent visits',
-      placeBelow: 'Below note',
-      placeAbove: 'Above note',
-      newTitleFormat: 'New note title',
-      dateFormat: 'Date format',
-      dateFormatHint: 'Browser default',
-      formatHelp: 'Placeholders: {YYYY} {MM} {DD} {H} {M} {S}',
-      importJson: 'Import JSON',
-      exportJson: 'Export JSON',
-      importDone: 'Imported: {added} new, {replaced} replaced, {skipped} skipped',
-      importFailed: 'Import failed: {error}',
-      saved: 'Saved successfully',
-    };
-
-    // t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
-    const t = (key, vars = {}) =>
-      (STRINGS[key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
-
-    // Fills HTML marked with data-l10n (text), data-l10n-title, data-l10n-placeholder.
-    // Runs after the export snapshot is taken, so saved files keep the keys, not the text.
-    function applyStrings() {
-      document.documentElement.lang = STRINGS.lang;
-      document.title = t('appTitle');
-      document.querySelectorAll('[data-l10n]').forEach(el => { el.textContent = t(el.dataset.l10n); });
-      for (const attr of ['title', 'placeholder']) {
-        document.querySelectorAll(`[data-l10n-${attr}]`)
-          .forEach(el => el.setAttribute(attr, t(el.getAttribute(`data-l10n-${attr}`))));
-      }
-    }
-
-    // === VAULT (the page is its own database) ===
-    // Notes live as XML text inside <script id="diffly-vault" type="application/xml">,
-    // placed at the top of <head> right after <meta charset> (the charset tag must
-    // stay within the first 1024 bytes, or browsers may guess the encoding wrong).
-    // Script content is raw text to the HTML parser, so it round-trips byte-for-byte
-    // through outerHTML
-    const VAULT_ID = 'diffly-vault';
-    const DEFAULT_FILENAME = 'diffly-wiki.html';
-
-    // Snapshot of the page taken before any rendering (see init at the bottom).
-    // Exports are built from it, so runtime DOM (list items, viewer HTML,
-    // inline styles) never leaks into the file, and the vault keeps its place.
-    let pristineRoot = null;
-
-    function childText(el, name) {
-      const c = Array.from(el.children).find(e => e.localName === name);
-      return c ? c.textContent : '';
-    }
-
-    // Raw text of an element, keeping any markup inside it. Note content is
-    // normally CDATA (plain text), but hand-edited files may hold raw HTML tags
-    // such as <u>, which the XML parser would otherwise turn into elements.
-    function childMarkup(el, name) {
-      const c = Array.from(el.children).find(e => e.localName === name);
-      if (!c) return '';
-      return Array.from(c.childNodes).map(node => node.nodeType === Node.ELEMENT_NODE
-        ? new XMLSerializer().serializeToString(node) : node.textContent).join('');
-    }
-
-    // Settings are attributes of <vault>, written in this key order. Each entry is
-    // [default, allowed values or a check]; anything missing or invalid falls back
-    // to the default. Values stay strings, exactly as stored in the file.
-    const SETTINGS = {
-      sort: ['date', ['date', 'title']],
-      order: ['desc', ['desc', 'asc']],
-      showTags: ['true', ['true', 'false']],
-      showSearch: ['true', ['true', 'false']],
-      visitsCap: ['20', v => /^\d{1,3}$/.test(v) && +v >= 1 && +v <= 100],
-      visitsPlace: ['below', ['below', 'above']],
-      newTitle: [STRINGS.newNoteTitle, isFormat], // empty: use the default above
-      dateFormat: ['', isFormat],                 // empty: browser's own format
-    };
-    function isFormat(v) { return v.length <= 200 && !/[\x00-\x1F]/.test(v); }
-
-    function validSetting(key, value) {
-      const rule = SETTINGS[key][1];
-      return value != null && (Array.isArray(rule) ? rule.includes(value) : rule(value));
-    }
-
-    function loadVault(el) {
-      const xml = new DOMParser().parseFromString(el.textContent.trim(), 'application/xml');
-      const err = xml.getElementsByTagName('parsererror')[0];
-      if (err) throw new Error('Vault XML is malformed: ' + err.textContent);
-      const root = xml.documentElement;
-      const settings = {};
-      for (const key in SETTINGS) {
-        const v = root.getAttribute(key);
-        settings[key] = validSetting(key, v) ? v : SETTINGS[key][0];
-      }
-      const notes = Array.from(root.children)
-        .filter(e => e.localName === 'note')
-        .map(n => ({
-          id: n.getAttribute('id'),
-          updated: n.getAttribute('updated') || '',
-          title: childText(n, 'title'),
-          content: childMarkup(n, 'content').trim()
-        }));
-      return { notes, settings };
-    }
-
-    // Note content goes in CDATA, so HTML and markdown stay readable in the file.
-    // CDATA can't contain "]]>", and inside the vault <script> the HTML parser
-    // must never see "</script" or "<!--"; each is split across two CDATA sections.
-    function cdata(s) {
-      s = String(s)
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
-        .replace(/\r\n?/g, '\n')
-        .replace(/]]>/g, ']]]]><![CDATA[>')
-        .replace(/<(?=\/script|!--)/gi, '<]]><![CDATA[');
-      return '<![CDATA[\n' + s + '\n]]>';
-    }
-
-    function xmlEscape(s, attr) {
-      s = String(s)
-        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/\r/g, '&#13;'); // the XML parser would otherwise fold \r into \n
-      return attr ? s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;') : s;
-    }
-
-	// === EXPORT/IMPORT ===
-    // Stable file order: title A→Z (case-insensitive), then newest "updated" first,
-    // then id. Plain code-point comparison, not localeCompare, so every browser
-    // and system locale writes the same order.
-    const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
-    function fileOrder(a, b) {
-      return cmp(a.title.toLowerCase(), b.title.toLowerCase())
-        || cmp(a.title, b.title)
-        || (Date.parse(b.updated) || 0) - (Date.parse(a.updated) || 0)
-        || cmp(a.id, b.id);
-    }
-
-    // Canonical form: loading this and serializing again yields the identical string.
-    // Content goes on its own lines; it is trimmed here and on load, so stray
-    // leading/trailing whitespace from the editor can't make exports drift.
-    function serializeVault(notes, settings) {
-      const attrs = Object.keys(SETTINGS).map(k => ` ${k}="${xmlEscape(settings[k], true)}"`).join('');
-      return `\n<vault version="1"${attrs}>\n\n` + [...notes].sort(fileOrder).map(n =>
-        `<note id="${xmlEscape(n.id, true)}" updated="${xmlEscape(n.updated || '', true)}">\n` +
-        `<title>${xmlEscape(n.title)}</title>\n` +
-        `<content>${cdata(n.content.trim())}</content>\n` +
-        `</note>\n\n`).join('') + '</vault>\n  ';
-    }
-
-    // Name of the file currently open (file:// or http path), sanitized; else a default.
-    function exportFilename(loc = location) {
-      let name = '';
-      if (/^(file|https?):$/.test(loc.protocol)) {
-        try { name = decodeURIComponent(loc.pathname.split('/').pop() || ''); } catch (e) { name = ''; }
-      }
-      name = name
-        .replace(/[<>:"\/\\|?*\x00-\x1F\x7F]/g, '_') // invalid on Windows/macOS/Linux
-        .replace(/^[\s.]+|[\s.]+$/g, '') // no leading/trailing dots or spaces
-        .slice(0, 200);
-      if (!name || /^_*$/.test(name)) return DEFAULT_FILENAME;
-      if (!/\.html?$/i.test(name)) name += '.html';
-      return name;
-    }
-
-    function buildExportHtml() {
-      const root = pristineRoot.cloneNode(true);
-      root.querySelector('#' + VAULT_ID).textContent = serializeVault(db, settings);
-      return '<!DOCTYPE html>\n' + root.outerHTML;
-    }
-
-    function download(blob, filename) {
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = filename;
-      document.body.appendChild(a); // some Firefox/Safari versions ignore clicks on detached links
-      a.click();
-      a.remove();
-    }
-
-    // The TW5 compatibility shim (end of script) may take over saving: $tw.diffly.save*()
-    // return true when they handled it (inside Tiddloid). Otherwise: a normal download.
-    function downloadText(text, filename, type) {
-      if (!window.$tw?.diffly?.saveDownload(text, filename)) download(new Blob([text], { type }), filename);
-    }
-
-    function downloadSelf() {
-      const html = buildExportHtml();
-      if (!window.$tw?.diffly?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
-      savedSignature = changeSignature();
-      updateExportState();
-      showSavedToast();
-    }
-
-    // "Saved successfully" toast for 3 s. Each save restarts the timer, so repeated
-    // saves can't leave it stuck: it hides 3 s after the last one.
-    const SAVED_TOAST_MS = 3000;
-    let savedToastTimer = null;
-    function showSavedToast() {
-      const toast = document.getElementById('save-toast');
-      toast.hidden = false;
-      placeSavedToast();
-      clearTimeout(savedToastTimer);
-      savedToastTimer = setTimeout(hideSavedToast, SAVED_TOAST_MS);
-    }
-
-    function hideSavedToast() {
-      clearTimeout(savedToastTimer);
-      document.getElementById('save-toast').hidden = true;
-    }
-
-    // Keep the toast on the visible part of the page, also when a phone is pinch-zoomed
-    // (position: fixed alone follows the unzoomed layout, not what is on screen)
-    function placeSavedToast() {
-      const toast = document.getElementById('save-toast'), vv = window.visualViewport;
-      if (toast.hidden || !vv) return;
-      toast.style.top = vv.offsetTop + 'px';
-      toast.style.left = vv.offsetLeft + 'px';
-      toast.style.width = vv.width + 'px';
-    }
-    window.visualViewport?.addEventListener('scroll', placeSavedToast);
-    window.visualViewport?.addEventListener('resize', placeSavedToast);
-
-    // === TW5 JSON IMPORT/EXPORT ===
-    // TiddlyWiki 5 format: an array of { text, title, modified, created, ... } with
-    // dates as "YYYYMMDDHHmmssSSS" in UTC. We add "id"; imports replace notes by id.
-    const toTw5Date = iso => { const d = new Date(iso); return iso && !isNaN(d) ? d.toISOString().replace(/\D/g, '').slice(0, 17) : ''; };
-    function fromTw5Date(s) {
-      const m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{3})?$/.exec(String(s || ''));
-      return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : '';
-    }
-
-    function exportJson() {
-      const tiddlers = [...db].sort(fileOrder).map(n => {
-        const tw = { text: n.content, title: n.title };
-        if (toTw5Date(n.updated)) tw.modified = toTw5Date(n.updated);
-        tw.id = n.id;
-        return tw;
-      });
-      downloadText(JSON.stringify(tiddlers, null, 4) + '\n', exportFilename().replace(/\.html?$/i, '.json'), 'application/json');
-    }
-
-    function importJsonFile(input) {
-      const file = input.files[0];
-      input.value = ''; // so the same file can be picked again
-      if (file) file.text().then(importJson).catch(e => alert(t('importFailed', { error: e.message })));
-    }
-
-    function importJson(text) {
-      const data = JSON.parse(text);
-      importTiddlers(Array.isArray(data) ? data : [data]);
-    }
-
-    // Adds TW5-style tiddlers ({ title, text, modified, created, id }) as notes.
-    // quiet: report only if something was actually imported (Tiddloid imports its
-    // own plugin on every load; that is a "$:/" tiddler and is always skipped).
-    function importTiddlers(list, { quiet = false } = {}) {
-      let added = 0, replaced = 0, skipped = 0;
-      list.forEach(tw => {
-        // TW5 system tiddlers ("$:/...") are settings/plugins, not notes
-        if (!tw || typeof tw.title !== 'string' || tw.title.startsWith('$:/')) { skipped++; return; }
-        const note = {
-          id: typeof tw.id === 'string' && tw.id ? tw.id : newId(),
-          updated: fromTw5Date(tw.modified) || fromTw5Date(tw.created) || nowIso(),
-          title: tw.title,
-          content: String(tw.text ?? '').trim()
-        };
-        const at = db.findIndex(n => n.id === note.id);
-        if (at >= 0) { db[at] = note; replaced++; } else { db.push(note); added++; }
-      });
-      if (added + replaced) savedSignature = null; // a replaced note may keep its date: still unsaved
-      loadNote(db.some(n => n.id === currentId) ? currentId : (db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
-      if (!quiet || added + replaced) alert(t('importDone', { added, replaced, skipped }));
-    }
-
-    // === CORE STATE ===
-    let { notes: db, settings } = loadVault(document.getElementById(VAULT_ID));
-
-    // Unsaved-changes tracking: the set of (id, updated) pairs as of the last
-    // load/export. Any edit, new note or deletion changes it, and Export turns red.
-    // Settings count too: they are saved in the file.
-    const changeSignature = () => db.map(n => n.id + '\u0000' + n.updated).sort().join('\n') + '\n' + JSON.stringify(settings);
-    let savedSignature = changeSignature(); // taken before .index may be auto-created
-
-    // "updated" is stored as ISO 8601 UTC, e.g. 2026-11-25T21:40:00Z
-    // Unique note id, e.g. note_1764160000000_k3j9x
-    function newId() {
-      let id;
-      do id = 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-      while (db.some(n => n.id === id));
-      return id;
-    }
-    const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-    const timeOf = n => Date.parse(n.updated) || 0;
-    const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
-
-    // Fills {YYYY} {MM} {DD} {H} {M} {S} from a date, in local time; all but the
-    // year are two digits. Other text, and unknown {names}, are kept as is.
-    function formatDate(format, d) {
-      const two = n => String(n).padStart(2, '0');
-      const parts = { YYYY: d.getFullYear(), MM: two(d.getMonth() + 1), DD: two(d.getDate()),
-                      H: two(d.getHours()), M: two(d.getMinutes()), S: two(d.getSeconds()) };
-      return format.replace(/\{(YYYY|MM|DD|H|M|S)\}/g, (m, k) => parts[k]);
-    }
-
-    // Subtitle date: the "Date format" setting, or the browser's default for the user's locale
-    function formatUpdated(iso) {
-      const d = new Date(iso);
-      if (!iso || isNaN(d)) return '';
-      return settings.dateFormat ? formatDate(settings.dateFormat, d) : d.toLocaleString();
-    }
-
-    // Start page: always opened on load, and recreated on load
-    // if missing. It is otherwise a normal note (rename/delete freely).
-    // Found by its fixed id, so the title can be anything.
-    const INDEX_ID = '.index';
-    function ensureIndexNote() {
-      let note = db.find(n => n.id === INDEX_ID);
-      if (!note) {
-        note = { id: INDEX_ID, updated: nowIso(), title: t('indexTitle'), content: t('indexContent') };
-        db.unshift(note);
-      }
-      return note;
-    }
-
-    let currentId = ensureIndexNote().id;
-    let selectedTags = new Set();
-    let isEditing = false;
-    // Recently opened notes, newest first. Stored as ids, so renames show up and
-    // deleted notes can be dropped. Kept for this session only, not saved in the file.
-    let visits = [];
-
-    const listEl = document.getElementById('note-list');
-    const tagCloudEl = document.getElementById('tag-cloud');
-    const titleEl = document.getElementById('title-input');
-    const editorEl = document.getElementById('editor');
-    const viewerEl = document.getElementById('viewer');
-    const subEl = document.getElementById('note-sub');
-    const exportBtn = document.getElementById('export-btn');
-
-    // #tag, #this-is-tag, #this_is_also_tag; a hyphen only between word chars,
-    // so "#tag-" or "#tag - text" stops before the dash
-    const TAG_RE = /#[\w가-힣]+(?:-[\w가-힣]+)*/g;
-    const CODE_BLOCK_RE = /^```[^\n]*\n([\s\S]*?)^```[ \t]*$/gm; // ```lang ... ``` on their own lines
-    const INLINE_CODE_RE = /`([^`\n]+)`/g;
-    const escHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    // Tags of a note, ignoring anything written inside code
-    const tagsOf = text => text.replace(CODE_BLOCK_RE, '').replace(INLINE_CODE_RE, '').match(TAG_RE) || [];
-
-    function parseMarkdown(text) {
-      if (!text) return "";
-      // Code is set aside first, so none of the rules below touch it, and put
-      // back (HTML-escaped) at the very end. Placeholders use private-use chars.
-      const stash = [];
-      const keep = html => `\uE000${stash.push(html) - 1}\uE001`;
-      return text
-        .replace(CODE_BLOCK_RE, (m, code) => keep(`<pre><code>${escHtml(code.replace(/\n$/, ''))}</code></pre>`))
-        .replace(INLINE_CODE_RE, (m, code) => keep(`<code>${escHtml(code)}</code>`))
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^\* (.*$)/gim, '• $1')                   // bullets first: their "* " is not emphasis
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')   // bold before italic, so ** isn't split
-        .replace(/\*([^*\s](?:[^*\n]*[^*\s])?)\*/g, '<i>$1</i>') // *x* but not "a * b * c"
-        .replace(/^---$/gm, '<hr>')
-        // Finished links are set aside too, so a #anchor in the address isn't taken for a tag
-        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, (m, label, url) =>
-          keep(`<a href="${url.replace(/"/g, '%22')}" target="_blank" class="ext-link">${label}</a>`))
-        .replace(TAG_RE, '<span class="wiki-tag">$&</span>')
-        .replace(/\[\[(.*?)\]\]/g, (m, target) => `<span class="wiki-link" onclick="navigateTo('${target}')">${target}</span>`)
-        .replace(/\n/g, '<br>')
-        .replace(/\uE000(\d+)\uE001/g, (m, i) => stash[i]);
-    }
-
-    function loadNote(id) {
-      currentId = id;
-      const note = db.find(n => n.id === id);
-      if (!note) return;
-      visits = [id, ...visits.filter(v => v !== id)].slice(0, +settings.visitsCap);
-
-      titleEl.value = note.title;
-      editorEl.value = note.content;
-      subEl.textContent = formatUpdated(note.updated);
-      viewerEl.innerHTML = parseMarkdown(note.content);
-      // The start page can't be deleted or closed from its card
-      for (const btn of ['delete-btn', 'close-btn']) document.getElementById(btn).hidden = id === INDEX_ID;
-      renderList();
-      window.scrollTo(0, 0); // a newly opened note is read from its top
-    }
-
-    function toggleTagFilter(tag) {
-      if (selectedTags.has(tag)) {
-        selectedTags.delete(tag);
-      } else {
-        selectedTags.add(tag);
-      }
-      renderList();
-    }
-
-    function resetTags() {
-      selectedTags.clear();
-      renderList();
-    }
-
-    function renderList() {
-      const search = document.getElementById('search').value.toLowerCase();
-      listEl.innerHTML = "";
-      
-      const allTags = new Set();
-      db.forEach(n => tagsOf(n.content).forEach(t => allTags.add(t)));
-      
-      tagCloudEl.innerHTML = "";
-      [...allTags].sort((a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b)).forEach(tag => {
-        const btn = document.createElement('span');
-        const isActive = selectedTags.has(tag);
-        btn.className = `tag-btn ${isActive ? 'active' : ''}`;
-        btn.textContent = tag;
-        btn.onclick = () => toggleTagFilter(tag);
-        tagCloudEl.appendChild(btn);
-      });
-      if (allTags.size) {
-        const x = document.createElement('span');
-        x.className = 'tag-reset';
-        x.textContent = '×';
-        x.title = t('clearTags');
-        x.onclick = resetTags;
-        tagCloudEl.appendChild(x);
-      } else {
-        const none = document.createElement('span');
-        none.className = 'tag-none';
-        none.textContent = t('noTags');
-        tagCloudEl.appendChild(none);
-      }
-
-      listOrder().filter(n => {
-        const matchSearch = n.title.toLowerCase().includes(search) || n.content.toLowerCase().includes(search);
-        const noteTags = tagsOf(n.content);
-        const matchTags = Array.from(selectedTags).every(st => noteTags.includes(st));
-
-        return matchSearch && matchTags;
-      }).forEach(note => {
-        const li = document.createElement('li');
-        li.className = note.id === currentId ? 'active' : '';
-        li.innerHTML = `<span>${note.title}</span>`;
-        li.onclick = () => loadNote(note.id);
-        listEl.appendChild(li);
-      });
-      renderVisits();
-      updateExportState(); // every change path ends in renderList()
-    }
-
-    // === SETTINGS ===
-    // Sidebar list order, from the "sort" and "order" settings
-    function listOrder() {
-      const dir = settings.order === 'asc' ? 1 : -1;
-      const byTitle = (a, b) => cmp(a.title.toLowerCase(), b.title.toLowerCase()) || cmp(a.title, b.title);
-      return [...db].sort(settings.sort === 'title'
-        ? (a, b) => dir * byTitle(a, b)
-        : (a, b) => dir * (timeOf(a) - timeOf(b)));
-    }
-
-    const settingsForm = () => document.getElementById('settings-panel');
-
-    function toggleSettings() {
-      const panel = settingsForm();
-      panel.hidden = !panel.hidden;
-      document.getElementById('settings-btn').classList.toggle('on', !panel.hidden);
-    }
-
-    function fillSettingsForm() {
-      const f = settingsForm().elements;
-      for (const key in SETTINGS) {
-        if (f[key].type === 'checkbox') f[key].checked = settings[key] === 'true';
-        else f[key].value = settings[key];
-      }
-    }
-
-    function readSettingsForm() {
-      const f = settingsForm().elements;
-      for (const key in SETTINGS) {
-        const v = f[key].type === 'checkbox' ? String(f[key].checked) : f[key].value.trim();
-        if (validSetting(key, v)) settings[key] = v;
-      }
-      fillSettingsForm(); // shows the kept value if an entry was invalid
-      applySettings();
-    }
-
-    // Applies settings to the page (the saved file is not touched until Export)
-    function applySettings() {
-      const search = document.getElementById('search');
-      search.hidden = settings.showSearch !== 'true';
-      if (search.hidden) search.value = '';          // no invisible filtering
-      tagCloudEl.hidden = settings.showTags !== 'true';
-      if (tagCloudEl.hidden) selectedTags.clear();
-      const card = document.querySelector('.note');
-      const visitsEl = document.getElementById('visits');
-      card.parentNode.insertBefore(visitsEl, settings.visitsPlace === 'above' ? card : card.nextSibling);
-      visitsEl.classList.toggle('above', settings.visitsPlace === 'above');
-      visits = visits.slice(0, +settings.visitsCap);
-      const note = db.find(n => n.id === currentId);
-      if (note) subEl.textContent = formatUpdated(note.updated);
-      renderList();
-    }
-
-    const VISIT_TITLE_MAX = 50;
-    // Cuts text to max characters + "..."; counts whole characters, so emoji aren't cut in half
-    function clip(text, max) {
-      const chars = Array.from(text);
-      return chars.length > max ? chars.slice(0, max).join('') + '...' : text;
-    }
-    function renderVisits() {
-      const el = document.getElementById('visits');
-      el.textContent = '';
-      visits.map(id => db.find(n => n.id === id)).filter(Boolean).forEach((note, i) => {
-        if (i) {
-          const sep = document.createElement('span');
-          sep.className = 'sep';
-          sep.textContent = '·';
-          el.appendChild(sep);
-        }
-        const title = note.title || t('untitled');
-        const a = document.createElement('span');
-        a.className = 'visit' + (note.id === currentId ? ' current' : '');
-        a.textContent = clip(title, VISIT_TITLE_MAX);
-        if (a.textContent !== title) a.title = title;
-        if (note.id !== currentId) a.onclick = () => loadNote(note.id);
-        el.appendChild(a);
-      });
-    }
-
-    const hasUnsavedChanges = () => changeSignature() !== savedSignature;
-
-    // Browser's own "Leave page?" prompt (its text can't be customised).
-    window.addEventListener('beforeunload', e => {
-      if (hasUnsavedChanges()) { e.preventDefault(); e.returnValue = ''; }
-    });
-
-    function updateExportState() {
-      const dirty = hasUnsavedChanges();
-      exportBtn.classList.toggle('dirty', dirty);
-      exportBtn.title = t(dirty ? 'exportHintDirty' : 'exportHint');
-    }
-
-    function saveCurrentNote() {
-      const note = db.find(n => n.id === currentId);
-      if (note) {
-        note.title = titleEl.value;
-        note.content = editorEl.value;
-        note.updated = nowIso();
-        subEl.textContent = formatUpdated(note.updated);
-        viewerEl.innerHTML = parseMarkdown(note.content);
-        renderList();
-      }
-    }
-
-    function toggleEdit() {
-      isEditing = !isEditing;
-      editorEl.style.display = isEditing ? 'block' : 'none';
-      viewerEl.style.display = isEditing ? 'none' : 'block';
-      const editBtn = document.getElementById('edit-btn');
-      editBtn.classList.toggle('editing', isEditing); // swaps pencil / check icon via CSS
-      editBtn.title = t(isEditing ? 'done' : 'edit');
-      titleEl.readOnly = !isEditing;
-      if (isEditing) {
-        // Start at the beginning of the text, not wherever the browser left the caret (the end)
-        editorEl.focus();
-        editorEl.setSelectionRange(0, 0);
-        editorEl.scrollTop = 0;
-      }
-    }
-
-    function createNewNote(content) {
-      const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()),
-                        content: typeof content === 'string' ? content : t('newNoteContent') };
-      db.unshift(newNote);
-      loadNote(newNote.id);
-      if (!isEditing) toggleEdit();
-    }
-
-    function deleteCurrentNote() {
-      const note = db.find(n => n.id === currentId);
-      if (!note) return;
-      if (db.length <= 1) return alert(t('cannotDeleteLast'));
-      if (!confirm(t('confirmDelete', { title: note.title || t('untitled') }))) return;
-      db = db.filter(n => n.id !== currentId);
-      visits = visits.filter(v => v !== currentId);
-      // Next: the index note if it still exists, else the most recently updated one
-      loadNote((db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
-    }
-
-    // Close: back to the previously visited note that still exists, else the index note.
-    // The closed note leaves the visit history, so repeated closes walk back through it.
-    function closeNote() {
-      const prev = visits.slice(1).find(id => db.some(n => n.id === id))
-        || (db.some(n => n.id === INDEX_ID) ? INDEX_ID : null);
-      if (!prev || prev === currentId) return; // already at the start page
-      if (isEditing) toggleEdit();
-      visits = visits.filter(v => v !== currentId);
-      loadNote(prev);
-    }
-
-    function navigateTo(title) {
-      let target = db.find(n => n.title.toLowerCase() === title.toLowerCase());
-      if (!target) {
-        target = { id: newId(), updated: nowIso(), title: title, content: t('linkNoteContent', { title }) };
-        db.unshift(target);
-      }
-      loadNote(target.id);
-    }
-
-    // === TW5 COMPATIBILITY (Tiddloid) ===
-    // Tiddloid (Android app for TiddlyWiki files) accepts a page that defines
-    // version.title (and no version.major, which would mean TiddlyWiki Classic), then
-    // drives it through TiddlyWiki 5 globals. This minimal $tw answers exactly the calls
-    // it makes: info for the toolbar, isDirty/saveWiki, new note from shared text,
-    // file import, links.
-    if (!window.$tw) {
-      window.version = { title: t('appTitle') };
-      // Palette lookup: page-background colours Tiddloid's toolbar like the page
-      const TW_TEXT = {
-        // App title bar: the index note's title, and its text as plain words, clipped
-        '$:/SiteTitle': () => indexNote()?.title || t('appTitle'),
-        '$:/SiteSubtitle': () => clip(plainText(indexNote()?.content || ''), VISIT_TITLE_MAX),
-        '$:/config/Tiddloid/ApplyTheme': () => 'yes',
-        '$:/palette': () => '$:/palettes/Diffly',
-        '$:/palettes/Diffly': () => 'page-background: #f4f4f4',
-      };
-      const indexNote = () => db.find(n => n.id === INDEX_ID);
-      // Rendered note text without markup; DOMParser runs no scripts or inline handlers
-      const plainText = md => new DOMParser()
-        .parseFromString(parseMarkdown(md).replace(/<br>|<\/(h1|h2|pre|li|p|div)>/g, ' $&'), 'text/html')
-        .body.textContent.replace(/\s+/g, ' ').trim();
-      const parseFields = text => {
-        const fields = {};
-        String(text || '').split('\n').forEach(line => {
-          const at = line.indexOf(':');
-          if (at > 0) fields[line.slice(0, at).trim()] = line.slice(at + 1).trim();
-        });
-        return fields;
-      };
-      // Event sent by Tiddloid's <$navigator> widget calls
-      const handleTwEvent = e => {
-        if (e.type === 'tm-new-tiddler') createNewNote(String(e.param && e.param.text || '').trim());
-        else if (e.type === 'tm-import-tiddlers') importTiddlers(JSON.parse(e.param), { quiet: true });
-      };
-      const BINARY_TYPE = /^(image\/(?!svg)|audio\/|video\/|application\/(pdf|octet-stream|zip))/;
-      window.$tw = {
-        rootWidget: {},
-        wiki: {
-          getTiddlerText: title => (TW_TEXT[title] ? TW_TEXT[title]() : null),
-          getTiddler: () => undefined,
-          parseText: () => null,
-          makeWidget: () => ({ render() {}, children: [{ children: [{ dispatchEvent: handleTwEvent }] }] }),
-          // Shared files -> tiddlers: TW5 JSON, .tid, or plain text; binary files are skipped
-          deserializeTiddlers(type, text, fields = {}) {
-            if (BINARY_TYPE.test(type || '')) return [];
-            if (type === 'application/json') {
-              try { const data = JSON.parse(text); return Array.isArray(data) ? data : [data]; } catch (e) { /* not JSON: import as text */ }
-            }
-            if (type === 'application/x-tiddler') {
-              const split = String(text).indexOf('\n\n');
-              const head = split < 0 ? text : text.slice(0, split);
-              return [{ ...parseFields(head), text: split < 0 ? '' : text.slice(split + 2) }];
-            }
-            return [{ title: String(fields.title || '').replace(/\.(txt|md|markdown|text)$/i, '') || t('untitled'), text }];
-          },
-        },
-        utils: { parseFields },
-        config: { contentTypeInfo: {} },
-        Wiki: { tiddlerDeserializerModules: {} },
-        saverHandler: { isDirty: () => hasUnsavedChanges(), saveWiki: () => downloadSelf() },
-        // Page -> app: Tiddloid injects a "twi" bridge that saves the opened file in place
-        // and shows a "save as" dialog for other files (it can't handle blob downloads).
-        // Used by downloadSelf()/downloadText(); true = handled here.
-        diffly: {
-          saveWiki(html) {
-            if (typeof window.twi?.saveWiki !== 'function') return false;
-            window.twi.saveWiki(html);
-            return true;
-          },
-          saveDownload(text, filename) {
-            if (typeof window.twi?.saveDownload !== 'function') return false;
-            window.twi.saveDownload(text, filename);
-            return true;
-          },
-        },
-        Story: class { navigateTiddler(title) { navigateTo(String(title)); } },
-      };
-    }
-
-    // Wait for the parser to finish so the snapshot includes everything after
-    // this script (whitespace, any markup added below), then render.
-    document.addEventListener('DOMContentLoaded', () => {
-      pristineRoot = document.documentElement.cloneNode(true);
-      applyStrings();
-      fillSettingsForm();
-      applySettings();
-      loadNote(currentId);
-    });
-  </script>
-  
+<div class="save-toast" id="save-toast" data-l10n="saved" hidden="" onclick="hideSavedToast()">Saved successfully</div>
+<main id="main">
+	<div class="note">
+		<div class="note-head">
+			<input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()">
+			<div class="note-controls">
+				<button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
+				<button id="delete-btn" class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
+				<button id="close-btn" class="icon-btn" title="Close" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+			</div>
+		</div>
+		<div class="note-sub" id="note-sub"></div>
+		<textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"></textarea>
+		<div id="viewer"></div>
+	</div>
+	<div class="visits" id="visits"></div>
+</main>
+<aside id="sidebar">
+	<div class="page-controls">
+		<div class="page-icons">
+			<button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
+			<button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+		</div>
+		<button id="export-btn" class="btn export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
+	</div>
+	<form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
+		<label class="check"><input type="checkbox" name="showTags"><span data-l10n="showTags">Show tags filter</span></label>
+		<label class="check"><input type="checkbox" name="showSearch"><span data-l10n="showSearch">Show search</span></label>
+		<label><span data-l10n="sortBy">Sort notes by</span>
+			<select name="sort"><option value="date" data-l10n="sortDate">Date</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
+		<label><span data-l10n="sortOrder">Order</span>
+			<select name="order"><option value="desc" data-l10n="orderDesc">Descending</option><option value="asc" data-l10n="orderAsc">Ascending</option></select></label>
+		<label><span data-l10n="visitsPlace">Recent visits</span>
+			<select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
+		<label><span data-l10n="visitsCap">Recent visits to keep</span>
+			<input type="number" name="visitsCap" min="1" max="100"></label>
+		<label class="wide"><span data-l10n="newTitleFormat">New note title</span>
+			<input type="text" name="newTitle"></label>
+		<label class="wide"><span data-l10n="dateFormat">Date format</span>
+			<input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint"></label>
+		<div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
+		<div class="io">
+			<button type="button" class="btn" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
+			<button type="button" class="btn" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
+		</div>
+	</form>
+	<input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)">
+	<input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
+	<div class="tag-cloud" id="tag-cloud"></div>
+	<ul id="note-list"></ul>
+	<div class="footer" data-l10n="footer">© 2026 DifflyWiki. MIT License</div>
+</aside>
+
+<script>
+	// === UI STRINGS: translate here ===
+	// Every interface string lives in this one object. "{name}" marks a value
+	// filled in at runtime; keep it, but move it anywhere in the sentence.
+	// English text in the HTML below is only a fallback and is replaced on load.
+	const STRINGS = {
+		lang: 'en',
+		appTitle: 'DifflyWiki',
+		footer: '© 2026 DifflyWiki. MIT License',
+		titlePlaceholder: 'Title',
+		editorPlaceholder: 'Write markdown, #tags, and [[WikiLinks]]...',
+		searchPlaceholder: 'Search',
+		edit: 'Edit',
+		done: 'Done',
+		delete: 'Delete',
+		close: 'Close',
+		newNote: 'New note',
+		export: 'Save',
+		exportHint: 'Download this wiki as HTML',
+		exportHintDirty: 'Unsaved changes: download this wiki as HTML',
+		clearTags: 'Clear tag filter',
+		noTags: 'Tags will be shown here',
+		confirmDelete: 'Delete note "{title}"?',
+		cannotDeleteLast: 'Cannot delete the last note.',
+		untitled: 'Untitled',
+		newNoteTitle: '{YYYY}-{MM}-{DD} Untitled', // default for the "New note title" setting
+		newNoteContent: '# New Note\n\nStart writing... #draft',
+		linkNoteContent: '# {title}\n\nCreated via WikiLink.',
+		indexTitle: 'Index',
+		indexContent: '# Start page of this wiki\nLink your main notes here',
+		settings: 'Settings',
+		sortBy: 'Sort notes by',
+		sortDate: 'Date',
+		sortTitle: 'Title',
+		sortOrder: 'Order',
+		orderDesc: 'Descending',
+		orderAsc: 'Ascending',
+		showTags: 'Show tags filter',
+		showSearch: 'Show search',
+		visitsCap: 'Recent visits to keep',
+		visitsPlace: 'Recent visits',
+		placeBelow: 'Below note',
+		placeAbove: 'Above note',
+		newTitleFormat: 'New note title',
+		dateFormat: 'Date format',
+		dateFormatHint: 'Browser default',
+		formatHelp: 'Placeholders: {YYYY} {MM} {DD} {H} {M} {S}',
+		importJson: 'Import JSON',
+		exportJson: 'Export JSON',
+		importDone: 'Imported: {added} new, {replaced} replaced, {skipped} skipped',
+		importFailed: 'Import failed: {error}',
+		saved: 'Saved successfully',
+	};
+
+	// t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
+	const t = (key, vars = {}) =>
+		(STRINGS[key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+
+	// Fills HTML marked with data-l10n (text), data-l10n-title, data-l10n-placeholder.
+	// Runs after the export snapshot is taken, so saved files keep the keys, not the text.
+	function applyStrings() {
+		document.documentElement.lang = STRINGS.lang;
+		document.title = t('appTitle');
+		document.querySelectorAll('[data-l10n]').forEach(el => { el.textContent = t(el.dataset.l10n); });
+		for (const attr of ['title', 'placeholder']) {
+			document.querySelectorAll(`[data-l10n-${attr}]`)
+				.forEach(el => el.setAttribute(attr, t(el.getAttribute(`data-l10n-${attr}`))));
+		}
+	}
+
+	// === VAULT (the page is its own database) ===
+	// Notes live as XML text inside <script id="diffly-vault" type="application/xml">,
+	// placed at the top of <head> right after <meta charset> (the charset tag must
+	// stay within the first 1024 bytes, or browsers may guess the encoding wrong).
+	// Script content is raw text to the HTML parser, so it round-trips byte-for-byte
+	// through outerHTML
+	const VAULT_ID = 'diffly-vault';
+	const DEFAULT_FILENAME = 'diffly-wiki.html';
+
+	// Snapshot of the page taken before any rendering (see init at the bottom).
+	// Exports are built from it, so runtime DOM (list items, viewer HTML,
+	// inline styles) never leaks into the file, and the vault keeps its place.
+	let pristineRoot = null;
+
+	function childText(el, name) {
+		const c = Array.from(el.children).find(e => e.localName === name);
+		return c ? c.textContent : '';
+	}
+
+	// Raw text of an element, keeping any markup inside it. Note content is
+	// normally CDATA (plain text), but hand-edited files may hold raw HTML tags
+	// such as <u>, which the XML parser would otherwise turn into elements.
+	function childMarkup(el, name) {
+		const c = Array.from(el.children).find(e => e.localName === name);
+		if (!c) return '';
+		return Array.from(c.childNodes).map(node => node.nodeType === Node.ELEMENT_NODE
+			? new XMLSerializer().serializeToString(node) : node.textContent).join('');
+	}
+
+	// Settings are attributes of <vault>, written in this key order. Each entry is
+	// [default, allowed values or a check]; anything missing or invalid falls back
+	// to the default. Values stay strings, exactly as stored in the file.
+	const SETTINGS = {
+		sort: ['date', ['date', 'title']],
+		order: ['desc', ['desc', 'asc']],
+		showTags: ['true', ['true', 'false']],
+		showSearch: ['true', ['true', 'false']],
+		visitsCap: ['20', v => /^\d{1,3}$/.test(v) && +v >= 1 && +v <= 100],
+		visitsPlace: ['below', ['below', 'above']],
+		newTitle: [STRINGS.newNoteTitle, isFormat], // empty: use the default above
+		dateFormat: ['', isFormat],                 // empty: browser's own format
+	};
+	function isFormat(v) { return v.length <= 200 && !/[\x00-\x1F]/.test(v); }
+
+	function validSetting(key, value) {
+		const rule = SETTINGS[key][1];
+		return value != null && (Array.isArray(rule) ? rule.includes(value) : rule(value));
+	}
+
+	function loadVault(el) {
+		const xml = new DOMParser().parseFromString(el.textContent.trim(), 'application/xml');
+		const err = xml.getElementsByTagName('parsererror')[0];
+		if (err) throw new Error('Vault XML is malformed: ' + err.textContent);
+		const root = xml.documentElement;
+		const settings = {};
+		for (const key in SETTINGS) {
+			const v = root.getAttribute(key);
+			settings[key] = validSetting(key, v) ? v : SETTINGS[key][0];
+		}
+		const notes = Array.from(root.children)
+			.filter(e => e.localName === 'note')
+			.map(n => ({
+				id: n.getAttribute('id'),
+				updated: n.getAttribute('updated') || '',
+				title: childText(n, 'title'),
+				content: childMarkup(n, 'content').trim()
+			}));
+		return { notes, settings };
+	}
+
+	// Note content goes in CDATA, so HTML and markdown stay readable in the file.
+	// CDATA can't contain "]]>", and inside the vault <script> the HTML parser
+	// must never see "</script" or "<!--"; each is split across two CDATA sections.
+	function cdata(s) {
+		s = String(s)
+			.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
+			.replace(/\r\n?/g, '\n')
+			.replace(/]]>/g, ']]]]><![CDATA[>')
+			.replace(/<(?=\/script|!--)/gi, '<]]><![CDATA[');
+		return '<![CDATA[\n' + s + '\n]]>';
+	}
+
+	function xmlEscape(s, attr) {
+		s = String(s)
+			.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
+			.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+			.replace(/\r/g, '&#13;'); // the XML parser would otherwise fold \r into \n
+		return attr ? s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;') : s;
+	}
+
+// === EXPORT/IMPORT ===
+	// Stable file order: title A→Z (case-insensitive), then newest "updated" first,
+	// then id. Plain code-point comparison, not localeCompare, so every browser
+	// and system locale writes the same order.
+	const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+	function fileOrder(a, b) {
+		return cmp(a.title.toLowerCase(), b.title.toLowerCase())
+			|| cmp(a.title, b.title)
+			|| (Date.parse(b.updated) || 0) - (Date.parse(a.updated) || 0)
+			|| cmp(a.id, b.id);
+	}
+
+	// Canonical form: loading this and serializing again yields the identical string.
+	// Content goes on its own lines; it is trimmed here and on load, so stray
+	// leading/trailing whitespace from the editor can't make exports drift.
+	function serializeVault(notes, settings) {
+		const attrs = Object.keys(SETTINGS).map(k => ` ${k}="${xmlEscape(settings[k], true)}"`).join('');
+		return `\n<vault version="1"${attrs}>\n\n` + [...notes].sort(fileOrder).map(n =>
+			`<note id="${xmlEscape(n.id, true)}" updated="${xmlEscape(n.updated || '', true)}">\n` +
+			`<title>${xmlEscape(n.title)}</title>\n` +
+			`<content>${cdata(n.content.trim())}</content>\n` +
+			`</note>\n\n`).join('') + '</vault>\n';
+	}
+
+	// Name of the file currently open (file:// or http path), sanitized; else a default.
+	function exportFilename(loc = location) {
+		let name = '';
+		if (/^(file|https?):$/.test(loc.protocol)) {
+			try { name = decodeURIComponent(loc.pathname.split('/').pop() || ''); } catch (e) { name = ''; }
+		}
+		name = name
+			.replace(/[<>:"\/\\|?*\x00-\x1F\x7F]/g, '_') // invalid on Windows/macOS/Linux
+			.replace(/^[\s.]+|[\s.]+$/g, '') // no leading/trailing dots or spaces
+			.slice(0, 200);
+		if (!name || /^_*$/.test(name)) return DEFAULT_FILENAME;
+		if (!/\.html?$/i.test(name)) name += '.html';
+		return name;
+	}
+
+	function buildExportHtml() {
+		const root = pristineRoot.cloneNode(true);
+		root.querySelector('#' + VAULT_ID).textContent = serializeVault(db, settings);
+		return '<!DOCTYPE html>\n' + root.outerHTML;
+	}
+
+	function download(blob, filename) {
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = filename;
+		document.body.appendChild(a); // some Firefox/Safari versions ignore clicks on detached links
+		a.click();
+		a.remove();
+	}
+
+	// The TW5 compatibility shim (end of script) may take over saving: $tw.diffly.save*()
+	// return true when they handled it (inside Tiddloid). Otherwise: a normal download.
+	function downloadText(text, filename, type) {
+		if (!window.$tw?.diffly?.saveDownload(text, filename)) download(new Blob([text], { type }), filename);
+	}
+
+	function downloadSelf() {
+		const html = buildExportHtml();
+		if (!window.$tw?.diffly?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
+		savedSignature = changeSignature();
+		updateExportState();
+		showSavedToast();
+	}
+
+	// "Saved successfully" toast for 3 s. Each save restarts the timer, so repeated
+	// saves can't leave it stuck: it hides 3 s after the last one.
+	const SAVED_TOAST_MS = 3000;
+	let savedToastTimer = null;
+	function showSavedToast() {
+		const toast = document.getElementById('save-toast');
+		toast.hidden = false;
+		placeSavedToast();
+		clearTimeout(savedToastTimer);
+		savedToastTimer = setTimeout(hideSavedToast, SAVED_TOAST_MS);
+	}
+
+	function hideSavedToast() {
+		clearTimeout(savedToastTimer);
+		document.getElementById('save-toast').hidden = true;
+	}
+
+	// Keep the toast on the visible part of the page, also when a phone is pinch-zoomed
+	// (position: fixed alone follows the unzoomed layout, not what is on screen)
+	function placeSavedToast() {
+		const toast = document.getElementById('save-toast'), vv = window.visualViewport;
+		if (toast.hidden || !vv) return;
+		toast.style.top = vv.offsetTop + 'px';
+		toast.style.left = vv.offsetLeft + 'px';
+		toast.style.width = vv.width + 'px';
+	}
+	window.visualViewport?.addEventListener('scroll', placeSavedToast);
+	window.visualViewport?.addEventListener('resize', placeSavedToast);
+
+	// === TW5 JSON IMPORT/EXPORT ===
+	// TiddlyWiki 5 format: an array of { text, title, modified, created, ... } with
+	// dates as "YYYYMMDDHHmmssSSS" in UTC. We add "id"; imports replace notes by id.
+	const toTw5Date = iso => { const d = new Date(iso); return iso && !isNaN(d) ? d.toISOString().replace(/\D/g, '').slice(0, 17) : ''; };
+	function fromTw5Date(s) {
+		const m = /^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})(\d{3})?$/.exec(String(s || ''));
+		return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z` : '';
+	}
+
+	function exportJson() {
+		const tiddlers = [...db].sort(fileOrder).map(n => {
+			const tw = { text: n.content, title: n.title };
+			if (toTw5Date(n.updated)) tw.modified = toTw5Date(n.updated);
+			tw.id = n.id;
+			return tw;
+		});
+		downloadText(JSON.stringify(tiddlers, null, 4) + '\n', exportFilename().replace(/\.html?$/i, '.json'), 'application/json');
+	}
+
+	function importJsonFile(input) {
+		const file = input.files[0];
+		input.value = ''; // so the same file can be picked again
+		if (file) file.text().then(importJson).catch(e => alert(t('importFailed', { error: e.message })));
+	}
+
+	function importJson(text) {
+		const data = JSON.parse(text);
+		importTiddlers(Array.isArray(data) ? data : [data]);
+	}
+
+	// Adds TW5-style tiddlers ({ title, text, modified, created, id }) as notes.
+	// quiet: report only if something was actually imported (Tiddloid imports its
+	// own plugin on every load; that is a "$:/" tiddler and is always skipped).
+	function importTiddlers(list, { quiet = false } = {}) {
+		let added = 0, replaced = 0, skipped = 0;
+		list.forEach(tw => {
+			// TW5 system tiddlers ("$:/...") are settings/plugins, not notes
+			if (!tw || typeof tw.title !== 'string' || tw.title.startsWith('$:/')) { skipped++; return; }
+			const note = {
+				id: typeof tw.id === 'string' && tw.id ? tw.id : newId(),
+				updated: fromTw5Date(tw.modified) || fromTw5Date(tw.created) || nowIso(),
+				title: tw.title,
+				content: String(tw.text ?? '').trim()
+			};
+			const at = db.findIndex(n => n.id === note.id);
+			if (at >= 0) { db[at] = note; replaced++; } else { db.push(note); added++; }
+		});
+		if (added + replaced) savedSignature = null; // a replaced note may keep its date: still unsaved
+		loadNote(db.some(n => n.id === currentId) ? currentId : (db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
+		if (!quiet || added + replaced) alert(t('importDone', { added, replaced, skipped }));
+	}
+
+	// === CORE STATE ===
+	let { notes: db, settings } = loadVault(document.getElementById(VAULT_ID));
+
+	// Unsaved-changes tracking: the set of (id, updated) pairs as of the last
+	// load/export. Any edit, new note or deletion changes it, and Export turns red.
+	// Settings count too: they are saved in the file.
+	const changeSignature = () => db.map(n => n.id + '\u0000' + n.updated).sort().join('\n') + '\n' + JSON.stringify(settings);
+	let savedSignature = changeSignature(); // taken before .index may be auto-created
+
+	// "updated" is stored as ISO 8601 UTC, e.g. 2026-11-25T21:40:00Z
+	// Unique note id, e.g. note_1764160000000_k3j9x
+	function newId() {
+		let id;
+		do id = 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+		while (db.some(n => n.id === id));
+		return id;
+	}
+	const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+	const timeOf = n => Date.parse(n.updated) || 0;
+	const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
+
+	// Fills {YYYY} {MM} {DD} {H} {M} {S} from a date, in local time; all but the
+	// year are two digits. Other text, and unknown {names}, are kept as is.
+	function formatDate(format, d) {
+		const two = n => String(n).padStart(2, '0');
+		const parts = { YYYY: d.getFullYear(), MM: two(d.getMonth() + 1), DD: two(d.getDate()),
+										H: two(d.getHours()), M: two(d.getMinutes()), S: two(d.getSeconds()) };
+		return format.replace(/\{(YYYY|MM|DD|H|M|S)\}/g, (m, k) => parts[k]);
+	}
+
+	// Subtitle date: the "Date format" setting, or the browser's default for the user's locale
+	function formatUpdated(iso) {
+		const d = new Date(iso);
+		if (!iso || isNaN(d)) return '';
+		return settings.dateFormat ? formatDate(settings.dateFormat, d) : d.toLocaleString();
+	}
+
+	// Start page: always opened on load, and recreated on load
+	// if missing. It is otherwise a normal note (rename/delete freely).
+	// Found by its fixed id, so the title can be anything.
+	const INDEX_ID = '.index';
+	function ensureIndexNote() {
+		let note = db.find(n => n.id === INDEX_ID);
+		if (!note) {
+			note = { id: INDEX_ID, updated: nowIso(), title: t('indexTitle'), content: t('indexContent') };
+			db.unshift(note);
+		}
+		return note;
+	}
+
+	let currentId = ensureIndexNote().id;
+	let selectedTags = new Set();
+	let isEditing = false;
+	// Recently opened notes, newest first. Stored as ids, so renames show up and
+	// deleted notes can be dropped. Kept for this session only, not saved in the file.
+	let visits = [];
+
+	const listEl = document.getElementById('note-list');
+	const tagCloudEl = document.getElementById('tag-cloud');
+	const titleEl = document.getElementById('title-input');
+	const editorEl = document.getElementById('editor');
+	const viewerEl = document.getElementById('viewer');
+	const subEl = document.getElementById('note-sub');
+	const exportBtn = document.getElementById('export-btn');
+
+	// #tag, #this-is-tag, #this_is_also_tag; a hyphen only between word chars,
+	// so "#tag-" or "#tag - text" stops before the dash
+	const TAG_RE = /#[\w가-힣]+(?:-[\w가-힣]+)*/g;
+	const CODE_BLOCK_RE = /^```[^\n]*\n([\s\S]*?)^```[ \t]*$/gm; // ```lang ... ``` on their own lines
+	const INLINE_CODE_RE = /`([^`\n]+)`/g;
+	const escHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+	// Tags of a note, ignoring anything written inside code
+	const tagsOf = text => text.replace(CODE_BLOCK_RE, '').replace(INLINE_CODE_RE, '').match(TAG_RE) || [];
+
+	function parseMarkdown(text) {
+		if (!text) return "";
+		// Code is set aside first, so none of the rules below touch it, and put
+		// back (HTML-escaped) at the very end. Placeholders use private-use chars.
+		const stash = [];
+		const keep = html => `\uE000${stash.push(html) - 1}\uE001`;
+		return text
+			.replace(CODE_BLOCK_RE, (m, code) => keep(`<pre><code>${escHtml(code.replace(/\n$/, ''))}</code></pre>`))
+			.replace(INLINE_CODE_RE, (m, code) => keep(`<code>${escHtml(code)}</code>`))
+			.replace(/^# (.*$)/gim, '<h1>$1</h1>')
+			.replace(/^## (.*$)/gim, '<h2>$1</h2>')
+			.replace(/^\* (.*$)/gim, '• $1')                   // bullets first: their "* " is not emphasis
+			.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')   // bold before italic, so ** isn't split
+			.replace(/\*([^*\s](?:[^*\n]*[^*\s])?)\*/g, '<i>$1</i>') // *x* but not "a * b * c"
+			.replace(/^---$/gm, '<hr>')
+			// Finished links are set aside too, so a #anchor in the address isn't taken for a tag
+			.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, (m, label, url) =>
+				keep(`<a href="${url.replace(/"/g, '%22')}" target="_blank" class="ext-link">${label}</a>`))
+			.replace(TAG_RE, '<span class="wiki-tag">$&</span>')
+			.replace(/\[\[(.*?)\]\]/g, (m, target) => `<span class="wiki-link" onclick="navigateTo('${target}')">${target}</span>`)
+			.replace(/\n/g, '<br>')
+			.replace(/\uE000(\d+)\uE001/g, (m, i) => stash[i]);
+	}
+
+	function loadNote(id) {
+		currentId = id;
+		const note = db.find(n => n.id === id);
+		if (!note) return;
+		visits = [id, ...visits.filter(v => v !== id)].slice(0, +settings.visitsCap);
+
+		titleEl.value = note.title;
+		editorEl.value = note.content;
+		subEl.textContent = formatUpdated(note.updated);
+		viewerEl.innerHTML = parseMarkdown(note.content);
+		// The start page can't be deleted or closed from its card
+		for (const btn of ['delete-btn', 'close-btn']) document.getElementById(btn).hidden = id === INDEX_ID;
+		renderList();
+		window.scrollTo(0, 0); // a newly opened note is read from its top
+	}
+
+	function toggleTagFilter(tag) {
+		if (selectedTags.has(tag)) {
+			selectedTags.delete(tag);
+		} else {
+			selectedTags.add(tag);
+		}
+		renderList();
+	}
+
+	function resetTags() {
+		selectedTags.clear();
+		renderList();
+	}
+
+	function renderList() {
+		const search = document.getElementById('search').value.toLowerCase();
+		listEl.innerHTML = "";
+		
+		const allTags = new Set();
+		db.forEach(n => tagsOf(n.content).forEach(t => allTags.add(t)));
+		
+		tagCloudEl.innerHTML = "";
+		[...allTags].sort((a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b)).forEach(tag => {
+			const btn = document.createElement('span');
+			const isActive = selectedTags.has(tag);
+			btn.className = `tag-btn ${isActive ? 'active' : ''}`;
+			btn.textContent = tag;
+			btn.onclick = () => toggleTagFilter(tag);
+			tagCloudEl.appendChild(btn);
+		});
+		if (allTags.size) {
+			const x = document.createElement('span');
+			x.className = 'tag-reset';
+			x.textContent = '×';
+			x.title = t('clearTags');
+			x.onclick = resetTags;
+			tagCloudEl.appendChild(x);
+		} else {
+			const none = document.createElement('span');
+			none.className = 'tag-none';
+			none.textContent = t('noTags');
+			tagCloudEl.appendChild(none);
+		}
+
+		listOrder().filter(n => {
+			const matchSearch = n.title.toLowerCase().includes(search) || n.content.toLowerCase().includes(search);
+			const noteTags = tagsOf(n.content);
+			const matchTags = Array.from(selectedTags).every(st => noteTags.includes(st));
+
+			return matchSearch && matchTags;
+		}).forEach(note => {
+			const li = document.createElement('li');
+			li.className = note.id === currentId ? 'active' : '';
+			li.innerHTML = `<span>${note.title}</span>`;
+			li.onclick = () => loadNote(note.id);
+			listEl.appendChild(li);
+		});
+		renderVisits();
+		updateExportState(); // every change path ends in renderList()
+	}
+
+	// === SETTINGS ===
+	// Sidebar list order, from the "sort" and "order" settings
+	function listOrder() {
+		const dir = settings.order === 'asc' ? 1 : -1;
+		const byTitle = (a, b) => cmp(a.title.toLowerCase(), b.title.toLowerCase()) || cmp(a.title, b.title);
+		return [...db].sort(settings.sort === 'title'
+			? (a, b) => dir * byTitle(a, b)
+			: (a, b) => dir * (timeOf(a) - timeOf(b)));
+	}
+
+	const settingsForm = () => document.getElementById('settings-panel');
+
+	function toggleSettings() {
+		const panel = settingsForm();
+		panel.hidden = !panel.hidden;
+		document.getElementById('settings-btn').classList.toggle('on', !panel.hidden);
+	}
+
+	function fillSettingsForm() {
+		const f = settingsForm().elements;
+		for (const key in SETTINGS) {
+			if (f[key].type === 'checkbox') f[key].checked = settings[key] === 'true';
+			else f[key].value = settings[key];
+		}
+	}
+
+	function readSettingsForm() {
+		const f = settingsForm().elements;
+		for (const key in SETTINGS) {
+			const v = f[key].type === 'checkbox' ? String(f[key].checked) : f[key].value.trim();
+			if (validSetting(key, v)) settings[key] = v;
+		}
+		fillSettingsForm(); // shows the kept value if an entry was invalid
+		applySettings();
+	}
+
+	// Applies settings to the page (the saved file is not touched until Export)
+	function applySettings() {
+		const search = document.getElementById('search');
+		search.hidden = settings.showSearch !== 'true';
+		if (search.hidden) search.value = '';          // no invisible filtering
+		tagCloudEl.hidden = settings.showTags !== 'true';
+		if (tagCloudEl.hidden) selectedTags.clear();
+		const card = document.querySelector('.note');
+		const visitsEl = document.getElementById('visits');
+		card.parentNode.insertBefore(visitsEl, settings.visitsPlace === 'above' ? card : card.nextSibling);
+		visitsEl.classList.toggle('above', settings.visitsPlace === 'above');
+		visits = visits.slice(0, +settings.visitsCap);
+		const note = db.find(n => n.id === currentId);
+		if (note) subEl.textContent = formatUpdated(note.updated);
+		renderList();
+	}
+
+	const VISIT_TITLE_MAX = 50;
+	// Cuts text to max characters + "..."; counts whole characters, so emoji aren't cut in half
+	function clip(text, max) {
+		const chars = Array.from(text);
+		return chars.length > max ? chars.slice(0, max).join('') + '...' : text;
+	}
+	function renderVisits() {
+		const el = document.getElementById('visits');
+		el.textContent = '';
+		visits.map(id => db.find(n => n.id === id)).filter(Boolean).forEach((note, i) => {
+			if (i) {
+				const sep = document.createElement('span');
+				sep.className = 'sep';
+				sep.textContent = '·';
+				el.appendChild(sep);
+			}
+			const title = note.title || t('untitled');
+			const a = document.createElement('span');
+			a.className = 'visit' + (note.id === currentId ? ' current' : '');
+			a.textContent = clip(title, VISIT_TITLE_MAX);
+			if (a.textContent !== title) a.title = title;
+			if (note.id !== currentId) a.onclick = () => loadNote(note.id);
+			el.appendChild(a);
+		});
+	}
+
+	const hasUnsavedChanges = () => changeSignature() !== savedSignature;
+
+	// Browser's own "Leave page?" prompt (its text can't be customised).
+	window.addEventListener('beforeunload', e => {
+		if (hasUnsavedChanges()) { e.preventDefault(); e.returnValue = ''; }
+	});
+
+	function updateExportState() {
+		const dirty = hasUnsavedChanges();
+		exportBtn.classList.toggle('dirty', dirty);
+		exportBtn.title = t(dirty ? 'exportHintDirty' : 'exportHint');
+	}
+
+	function saveCurrentNote() {
+		const note = db.find(n => n.id === currentId);
+		if (note) {
+			note.title = titleEl.value;
+			note.content = editorEl.value;
+			note.updated = nowIso();
+			subEl.textContent = formatUpdated(note.updated);
+			viewerEl.innerHTML = parseMarkdown(note.content);
+			renderList();
+		}
+	}
+
+	function toggleEdit() {
+		isEditing = !isEditing;
+		editorEl.style.display = isEditing ? 'block' : 'none';
+		viewerEl.style.display = isEditing ? 'none' : 'block';
+		const editBtn = document.getElementById('edit-btn');
+		editBtn.classList.toggle('editing', isEditing); // swaps pencil / check icon via CSS
+		editBtn.title = t(isEditing ? 'done' : 'edit');
+		titleEl.readOnly = !isEditing;
+		if (isEditing) {
+			// Start at the beginning of the text, not wherever the browser left the caret (the end)
+			editorEl.focus();
+			editorEl.setSelectionRange(0, 0);
+			editorEl.scrollTop = 0;
+		}
+	}
+
+	function createNewNote(content) {
+		const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()),
+											content: typeof content === 'string' ? content : t('newNoteContent') };
+		db.unshift(newNote);
+		loadNote(newNote.id);
+		if (!isEditing) toggleEdit();
+	}
+
+	function deleteCurrentNote() {
+		const note = db.find(n => n.id === currentId);
+		if (!note) return;
+		if (db.length <= 1) return alert(t('cannotDeleteLast'));
+		if (!confirm(t('confirmDelete', { title: note.title || t('untitled') }))) return;
+		db = db.filter(n => n.id !== currentId);
+		visits = visits.filter(v => v !== currentId);
+		// Next: the index note if it still exists, else the most recently updated one
+		loadNote((db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
+	}
+
+	// Close: back to the previously visited note that still exists, else the index note.
+	// The closed note leaves the visit history, so repeated closes walk back through it.
+	function closeNote() {
+		const prev = visits.slice(1).find(id => db.some(n => n.id === id))
+			|| (db.some(n => n.id === INDEX_ID) ? INDEX_ID : null);
+		if (!prev || prev === currentId) return; // already at the start page
+		if (isEditing) toggleEdit();
+		visits = visits.filter(v => v !== currentId);
+		loadNote(prev);
+	}
+
+	function navigateTo(title) {
+		let target = db.find(n => n.title.toLowerCase() === title.toLowerCase());
+		if (!target) {
+			target = { id: newId(), updated: nowIso(), title: title, content: t('linkNoteContent', { title }) };
+			db.unshift(target);
+		}
+		loadNote(target.id);
+	}
+
+	// === TW5 COMPATIBILITY (Tiddloid) ===
+	// Tiddloid (Android app for TiddlyWiki files) accepts a page that defines
+	// version.title (and no version.major, which would mean TiddlyWiki Classic), then
+	// drives it through TiddlyWiki 5 globals. This minimal $tw answers exactly the calls
+	// it makes: info for the toolbar, isDirty/saveWiki, new note from shared text,
+	// file import, links.
+	if (!window.$tw) {
+		window.version = { title: t('appTitle') };
+		// Palette lookup: page-background colours Tiddloid's toolbar like the page
+		const TW_TEXT = {
+			// App title bar: the index note's title, and its text as plain words, clipped
+			'$:/SiteTitle': () => indexNote()?.title || t('appTitle'),
+			'$:/SiteSubtitle': () => clip(plainText(indexNote()?.content || ''), VISIT_TITLE_MAX),
+			'$:/config/Tiddloid/ApplyTheme': () => 'yes',
+			'$:/palette': () => '$:/palettes/Diffly',
+			'$:/palettes/Diffly': () => 'page-background: #f4f4f4',
+		};
+		const indexNote = () => db.find(n => n.id === INDEX_ID);
+		// Rendered note text without markup; DOMParser runs no scripts or inline handlers
+		const plainText = md => new DOMParser()
+			.parseFromString(parseMarkdown(md).replace(/<br>|<\/(h1|h2|pre|li|p|div)>/g, ' $&'), 'text/html')
+			.body.textContent.replace(/\s+/g, ' ').trim();
+		const parseFields = text => {
+			const fields = {};
+			String(text || '').split('\n').forEach(line => {
+				const at = line.indexOf(':');
+				if (at > 0) fields[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+			});
+			return fields;
+		};
+		// Event sent by Tiddloid's <$navigator> widget calls
+		const handleTwEvent = e => {
+			if (e.type === 'tm-new-tiddler') createNewNote(String(e.param && e.param.text || '').trim());
+			else if (e.type === 'tm-import-tiddlers') importTiddlers(JSON.parse(e.param), { quiet: true });
+		};
+		const BINARY_TYPE = /^(image\/(?!svg)|audio\/|video\/|application\/(pdf|octet-stream|zip))/;
+		window.$tw = {
+			rootWidget: {},
+			wiki: {
+				getTiddlerText: title => (TW_TEXT[title] ? TW_TEXT[title]() : null),
+				getTiddler: () => undefined,
+				parseText: () => null,
+				makeWidget: () => ({ render() {}, children: [{ children: [{ dispatchEvent: handleTwEvent }] }] }),
+				// Shared files -> tiddlers: TW5 JSON, .tid, or plain text; binary files are skipped
+				deserializeTiddlers(type, text, fields = {}) {
+					if (BINARY_TYPE.test(type || '')) return [];
+					if (type === 'application/json') {
+						try { const data = JSON.parse(text); return Array.isArray(data) ? data : [data]; } catch (e) { /* not JSON: import as text */ }
+					}
+					if (type === 'application/x-tiddler') {
+						const split = String(text).indexOf('\n\n');
+						const head = split < 0 ? text : text.slice(0, split);
+						return [{ ...parseFields(head), text: split < 0 ? '' : text.slice(split + 2) }];
+					}
+					return [{ title: String(fields.title || '').replace(/\.(txt|md|markdown|text)$/i, '') || t('untitled'), text }];
+				},
+			},
+			utils: { parseFields },
+			config: { contentTypeInfo: {} },
+			Wiki: { tiddlerDeserializerModules: {} },
+			saverHandler: { isDirty: () => hasUnsavedChanges(), saveWiki: () => downloadSelf() },
+			// Page -> app: Tiddloid injects a "twi" bridge that saves the opened file in place
+			// and shows a "save as" dialog for other files (it can't handle blob downloads).
+			// Used by downloadSelf()/downloadText(); true = handled here.
+			diffly: {
+				saveWiki(html) {
+					if (typeof window.twi?.saveWiki !== 'function') return false;
+					window.twi.saveWiki(html);
+					return true;
+				},
+				saveDownload(text, filename) {
+					if (typeof window.twi?.saveDownload !== 'function') return false;
+					window.twi.saveDownload(text, filename);
+					return true;
+				},
+			},
+			Story: class { navigateTiddler(title) { navigateTo(String(title)); } },
+		};
+	}
+
+	// Wait for the parser to finish so the snapshot includes everything after
+	// this script (whitespace, any markup added below), then render.
+	document.addEventListener('DOMContentLoaded', () => {
+		pristineRoot = document.documentElement.cloneNode(true);
+		applyStrings();
+		fillSettingsForm();
+		applySettings();
+		loadNote(currentId);
+	});
+</script>
+
+
 </body></html>
