@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
   <meta charset="UTF-8">
-  <script id="twslim-vault" type="application/xml">
+  <script id="diffly-vault" type="application/xml">
 <vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below" newTitle="{YYYY}-{MM}-{DD} Untitled" dateFormat="">
 
 <note id="description" updated="2026-11-25T09:00:00Z">
@@ -13,7 +13,7 @@ This is a **zero-dependency, single-file HTML wiki** with Markdown support
 ## Status: partial
 
 * 🔗 Internal link: [[Index]]
-* 🌐 External link and a tag: [GitHub](https://github.com/IPv6/TiddlyWikiSlim) #github
+* 🌐 External link and a tag: [GitHub](https://github.com/IPv6/DifflyWiki) #github
 * Html <u>also can be used</u> (warning: <span style="color: red;">no sanitization</span>)
 
 ```
@@ -43,8 +43,8 @@ Link your main notes here
 </vault>
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="application-name" content="TiddlyWiki">
-  <title>TiddlyWiki Slim</title>
+  <meta name="application-name" content="DifflyWiki">
+  <title>DifflyWiki</title>
   <style>
     :root {
       --page: #f4f4f4;
@@ -69,12 +69,12 @@ Link your main notes here
 
     /* Story river: the note card */
     #main { flex: 1; min-width: 0; padding: 40px 28px 40px 42px; }
-    .tiddler {
+    .note {
       background: var(--card); border-radius: 2px; padding: 42px 56px 48px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
     }
-    .tiddler-head { display: flex; align-items: flex-start; gap: 16px; }
-    .tiddler-sub { color: var(--faint); margin: 2px 0 22px; min-height: 1.5em; }
+    .note-head { display: flex; align-items: flex-start; gap: 16px; }
+    .note-sub { color: var(--faint); margin: 2px 0 22px; min-height: 1.5em; }
     .title-input {
       flex: 1; min-width: 0; background: transparent; outline: none;
       font: inherit; font-size: 2.35em; line-height: 1.25; font-weight: 400; color: var(--title);
@@ -86,7 +86,7 @@ Link your main notes here
        text stays where it is in view mode. */
     .title-input:not([readonly]) { background: #fff; border-color: var(--rule); }
     .title-input:not([readonly]):focus { border-color: var(--focus); }
-    .tiddler-controls { display: flex; gap: 6px; padding-top: 6px; }
+    .note-controls { display: flex; gap: 6px; padding-top: 6px; }
 
     /* Icon buttons (pencil, trash, plus, check) */
     .icon-btn {
@@ -212,7 +212,7 @@ Link your main notes here
     @media (max-width: 900px) {
       body { flex-direction: column; align-items: stretch; }
       #main { flex: none; padding: 16px; }
-      .tiddler { padding: 24px 20px 28px; }
+      .note { padding: 24px 20px 28px; }
       .title-input { font-size: 1.9em; }
       #sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; align-items: center; } /* column centered below the note */
       #note-list { max-height: none; }
@@ -223,16 +223,16 @@ Link your main notes here
   <div class="save-toast" id="save-toast" data-l10n="saved" hidden="" onclick="hideSavedToast()">Saved successfully</div>
 
   <main id="main">
-    <div class="tiddler">
-      <div class="tiddler-head">
+    <div class="note">
+      <div class="note-head">
         <input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()">
-        <div class="tiddler-controls">
+        <div class="note-controls">
           <button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
           <button id="delete-btn" class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
           <button id="close-btn" class="icon-btn" title="Close" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
       </div>
-      <div class="tiddler-sub" id="note-sub"></div>
+      <div class="note-sub" id="note-sub"></div>
 
       <textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"></textarea>
       <div id="viewer"></div>
@@ -279,7 +279,7 @@ Link your main notes here
 
     <ul id="note-list"></ul>
 
-    <div class="footer" data-l10n="footer">© 2026 TiddlyWiki Slim. MIT License</div>
+    <div class="footer" data-l10n="footer">© 2026 DifflyWiki. MIT License</div>
   </aside>
 
   <script>
@@ -289,8 +289,8 @@ Link your main notes here
     // English text in the HTML below is only a fallback and is replaced on load.
     const STRINGS = {
       lang: 'en',
-      appTitle: 'TiddlyWiki Slim',
-      footer: '© 2026 TiddlyWiki Slim. MIT License',
+      appTitle: 'DifflyWiki',
+      footer: '© 2026 DifflyWiki. MIT License',
       titlePlaceholder: 'Title',
       editorPlaceholder: 'Write markdown, #tags, and [[WikiLinks]]...',
       searchPlaceholder: 'Search',
@@ -353,13 +353,13 @@ Link your main notes here
     }
 
     // === VAULT (the page is its own database) ===
-    // Notes live as XML text inside <script id="twslim-vault" type="application/xml">,
+    // Notes live as XML text inside <script id="diffly-vault" type="application/xml">,
     // placed at the top of <head> right after <meta charset> (the charset tag must
     // stay within the first 1024 bytes, or browsers may guess the encoding wrong).
     // Script content is raw text to the HTML parser, so it round-trips byte-for-byte
     // through outerHTML
-    const VAULT_ID = 'twslim-vault';
-    const DEFAULT_FILENAME = 'slim-wiki.html';
+    const VAULT_ID = 'diffly-vault';
+    const DEFAULT_FILENAME = 'diffly-wiki.html';
 
     // Snapshot of the page taken before any rendering (see init at the bottom).
     // Exports are built from it, so runtime DOM (list items, viewer HTML,
@@ -496,15 +496,15 @@ Link your main notes here
       a.remove();
     }
 
-    // The TW5 compatibility shim (end of script) may take over saving: $tw.slim.save*()
+    // The TW5 compatibility shim (end of script) may take over saving: $tw.diffly.save*()
     // return true when they handled it (inside Tiddloid). Otherwise: a normal download.
     function downloadText(text, filename, type) {
-      if (!window.$tw?.slim?.saveDownload(text, filename)) download(new Blob([text], { type }), filename);
+      if (!window.$tw?.diffly?.saveDownload(text, filename)) download(new Blob([text], { type }), filename);
     }
 
     function downloadSelf() {
       const html = buildExportHtml();
-      if (!window.$tw?.slim?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
+      if (!window.$tw?.diffly?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
       savedSignature = changeSignature();
       updateExportState();
       showSavedToast();
@@ -809,7 +809,7 @@ Link your main notes here
       if (search.hidden) search.value = '';          // no invisible filtering
       tagCloudEl.hidden = settings.showTags !== 'true';
       if (tagCloudEl.hidden) selectedTags.clear();
-      const card = document.querySelector('.tiddler');
+      const card = document.querySelector('.note');
       const visitsEl = document.getElementById('visits');
       card.parentNode.insertBefore(visitsEl, settings.visitsPlace === 'above' ? card : card.nextSibling);
       visitsEl.classList.toggle('above', settings.visitsPlace === 'above');
@@ -926,21 +926,21 @@ Link your main notes here
     }
 
     // === TW5 COMPATIBILITY (Tiddloid) ===
-    // Tiddloid (Android TiddlyWiki app) recognises a wiki by <meta name="application-name"
-    // content="TiddlyWiki"> and then drives it through TiddlyWiki 5 globals. This minimal
-    // $tw answers exactly the calls it makes:
-    // info for the toolbar, isDirty/saveWiki, new note from shared text, file import, links.
-
-
+    // Tiddloid (Android app for TiddlyWiki files) accepts a page that defines
+    // version.title (and no version.major, which would mean TiddlyWiki Classic), then
+    // drives it through TiddlyWiki 5 globals. This minimal $tw answers exactly the calls
+    // it makes: info for the toolbar, isDirty/saveWiki, new note from shared text,
+    // file import, links.
     if (!window.$tw) {
+      window.version = { title: t('appTitle') };
       // Palette lookup: page-background colours Tiddloid's toolbar like the page
       const TW_TEXT = {
         // App title bar: the index note's title, and its text as plain words, clipped
         '$:/SiteTitle': () => indexNote()?.title || t('appTitle'),
         '$:/SiteSubtitle': () => clip(plainText(indexNote()?.content || ''), VISIT_TITLE_MAX),
         '$:/config/Tiddloid/ApplyTheme': () => 'yes',
-        '$:/palette': () => '$:/palettes/Slim',
-        '$:/palettes/Slim': () => 'page-background: #f4f4f4',
+        '$:/palette': () => '$:/palettes/Diffly',
+        '$:/palettes/Diffly': () => 'page-background: #f4f4f4',
       };
       const indexNote = () => db.find(n => n.id === INDEX_ID);
       // Rendered note text without markup; DOMParser runs no scripts or inline handlers
@@ -989,7 +989,7 @@ Link your main notes here
         // Page -> app: Tiddloid injects a "twi" bridge that saves the opened file in place
         // and shows a "save as" dialog for other files (it can't handle blob downloads).
         // Used by downloadSelf()/downloadText(); true = handled here.
-        slim: {
+        diffly: {
           saveWiki(html) {
             if (typeof window.twi?.saveWiki !== 'function') return false;
             window.twi.saveWiki(html);

@@ -1,6 +1,6 @@
-# TiddlyWiki Slim
+# DifflyWiki
 
-Slim version of TiddlyWiki — empty file size is less than 50 KB.
+A tiny, git-diff-friendly single-file wiki — empty file size is less than 50 KB.
 
 ## Why
 
@@ -9,7 +9,7 @@ Slim version of TiddlyWiki — empty file size is less than 50 KB.
   * Export preserves note formatting and keeps notes sorted alphabetically (A-Z by title)
 * Barebone functionality: Notes (with title+content+update date), Recents, Visits history, Search (title+content), Tags filter
 * Barebone Tags support. Tags are auto-discovered from note content, sorted A-Z for filtering
-* Import/Export in TW5 json format
+* Import/Export in TiddlyWiki 5 JSON format
 * Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
 
 ## Tradeoffs
@@ -21,15 +21,15 @@ Slim version of TiddlyWiki — empty file size is less than 50 KB.
 
 # What's next
 
-* Download [empty Wiki](slim-wiki.html) and open in any browser
+* Download [empty Wiki](diffly-wiki.html) and open in any browser
 
 ## More details
 
-* Visits history for fast navigation (instead of TW-like story river)
+* Visits history for fast navigation (instead of TiddlyWiki-like story river)
 * New notes: Customizable title format
 * Index note: the one with hardcoded id ".index". Recreated at start if not found
 * Basic markdown support: formatting, links, `fenced` blocks and inline html
-* Internals: Unlike TiddlyWiki5 and FeatherWiki (which serialize content as a JSON string), TiddlyWiki Slim uses an XML vault
+* Internals: Unlike TiddlyWiki5 and FeatherWiki (which serialize content as a JSON string), DifflyWiki uses an XML vault
   * In some ways, it is similar to TiddlyWiki Classic, though improved
 * Internals: Note contents are wrapped in CDATA on export (no escaped entities in the exported content)
 * Internals: Localizable STRINGS collected in one place for easy localization
