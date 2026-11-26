@@ -145,10 +145,12 @@ Link your main notes here
     #sidebar > * { width: 100%; max-width: var(--side-col); }
     #sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); } /* offsets its -4px left margin */
     .page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; min-height: 40px; }
-    /* After saving, the row shows only a green notice for a few seconds */
-    .save-note { display: none; margin: 0 auto; color: #2e9e44; font-weight: 600; } /* centered in the row */
-    .page-controls.saved > * { display: none; }
-    .page-controls.saved > .save-note { display: block; }
+    /* Toast after saving: full-width stripe over everything at the top of the screen */
+    .save-toast {
+      position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
+      padding: 10px 16px; text-align: center; font-weight: 600;
+      background: #fff; color: #2e9e44; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+    }
     /* Text buttons: Save, Import JSON, Export JSON */
     .btn {
       padding: 3px 10px; cursor: pointer; color: var(--text);
@@ -218,6 +220,7 @@ Link your main notes here
   </style>
 </head>
 <body>
+  <div class="save-toast" id="save-toast" data-l10n="saved" hidden="">Saved successfully</div>
 
   <main id="main">
     <div class="tiddler">
@@ -244,7 +247,6 @@ Link your main notes here
         <button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       </div>
       <button id="export-btn" class="btn export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
-      <span class="save-note" data-l10n="saved">Saved successfully</span>
     </div>
 
     <form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
@@ -503,19 +505,32 @@ Link your main notes here
       if (!window.$tw?.slim?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
       savedSignature = changeSignature();
       updateExportState();
-      showSavedNote();
+      showSavedToast();
     }
 
-    // Green "Saved successfully" in place of the icon row for 3 s. Each save restarts
-    // the timer, so repeated saves can't leave it stuck: it clears 3 s after the last one.
-    const SAVED_NOTE_MS = 3000;
-    let savedNoteTimer = null;
-    function showSavedNote() {
-      const row = document.querySelector('.page-controls');
-      row.classList.add('saved');
-      clearTimeout(savedNoteTimer);
-      savedNoteTimer = setTimeout(() => row.classList.remove('saved'), SAVED_NOTE_MS);
+    // "Saved successfully" toast for 3 s. Each save restarts the timer, so repeated
+    // saves can't leave it stuck: it hides 3 s after the last one.
+    const SAVED_TOAST_MS = 3000;
+    let savedToastTimer = null;
+    function showSavedToast() {
+      const toast = document.getElementById('save-toast');
+      toast.hidden = false;
+      placeSavedToast();
+      clearTimeout(savedToastTimer);
+      savedToastTimer = setTimeout(() => { toast.hidden = true; }, SAVED_TOAST_MS);
     }
+
+    // Keep the toast on the visible part of the page, also when a phone is pinch-zoomed
+    // (position: fixed alone follows the unzoomed layout, not what is on screen)
+    function placeSavedToast() {
+      const toast = document.getElementById('save-toast'), vv = window.visualViewport;
+      if (toast.hidden || !vv) return;
+      toast.style.top = vv.offsetTop + 'px';
+      toast.style.left = vv.offsetLeft + 'px';
+      toast.style.width = vv.width + 'px';
+    }
+    window.visualViewport?.addEventListener('scroll', placeSavedToast);
+    window.visualViewport?.addEventListener('resize', placeSavedToast);
 
     // === TW5 JSON IMPORT/EXPORT ===
     // TiddlyWiki 5 format: an array of { text, title, modified, created, ... } with
@@ -678,6 +693,7 @@ Link your main notes here
       subEl.textContent = formatUpdated(note.updated);
       viewerEl.innerHTML = parseMarkdown(note.content);
       renderList();
+      window.scrollTo(0, 0); // a newly opened note is read from its top
     }
 
     function toggleTagFilter(tag) {
@@ -853,7 +869,12 @@ Link your main notes here
       editBtn.classList.toggle('editing', isEditing); // swaps pencil / check icon via CSS
       editBtn.title = t(isEditing ? 'done' : 'edit');
       titleEl.readOnly = !isEditing;
-      if (isEditing) editorEl.focus();
+      if (isEditing) {
+        // Start at the beginning of the text, not wherever the browser left the caret (the end)
+        editorEl.focus();
+        editorEl.setSelectionRange(0, 0);
+        editorEl.scrollTop = 0;
+      }
     }
 
     function createNewNote(content) {
