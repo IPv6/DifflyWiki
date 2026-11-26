@@ -134,7 +134,7 @@ Link your main notes here
     .visits .visit:hover { text-decoration: underline; }
     .visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
     .visits .sep { margin: 0 7px; color: var(--faint); }
-    .footer { color: var(--faint); font-size: 0.8em; margin-top: 14px; padding-left: 4px; }
+    .footer { flex: none; color: var(--faint); font-size: 0.8em; margin-top: 14px; } /* last in the sidebar, under the note list */
 
     /* Sidebar */
     #sidebar {
@@ -146,13 +146,18 @@ Link your main notes here
     #sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); } /* offsets its -4px left margin */
     .page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; min-height: 40px; }
     /* After saving, the row shows only a green notice for a few seconds */
-    .save-note { display: none; margin-left: auto; color: #2e9e44; font-weight: 600; } /* right edge = Save button */
+    .save-note { display: none; margin: 0 auto; color: #2e9e44; font-weight: 600; } /* centered in the row */
     .page-controls.saved > * { display: none; }
     .page-controls.saved > .save-note { display: block; }
-    .export-btn { background: none; border: none; cursor: pointer; padding: 4px 0; font-size: 0.95em; color: var(--muted); }
-    .export-btn:hover { color: var(--text); }
-    .export-btn.dirty { color: #d23c3c; }
-    .export-btn.dirty:hover { color: #a82020; }
+    /* Text buttons: Save, Import JSON, Export JSON */
+    .btn {
+      padding: 3px 10px; cursor: pointer; color: var(--text);
+      background: var(--page); border: 1px solid var(--rule); border-radius: 4px;
+    }
+    .btn:hover { border-color: var(--focus); }
+    .export-btn { font-size: 0.95em; }
+    .export-btn.dirty { color: #d23c3c; border-color: #d23c3c; }
+    .export-btn.dirty:hover { color: #a82020; border-color: #a82020; }
     .page-controls .icon-btn svg { width: 32px; height: 32px; color: #999; }
     .page-icons { display: flex; align-items: center; gap: 6px; }
     #settings-btn svg { width: 25.6px; height: 25.6px; } /* 20% smaller than the + icon */
@@ -170,11 +175,7 @@ Link your main notes here
     .settings input[type="text"] { width: 100%; height: 1.8em; padding: 0 4px; }
     .settings .hint { color: var(--muted); }
     .settings .io { display: flex; gap: 8px; margin-top: 2px; }
-    .settings .io button {
-      flex: 1; padding: 3px 6px; cursor: pointer; color: var(--text);
-      background: var(--page); border: 1px solid var(--rule); border-radius: 4px;
-    }
-    .settings .io button:hover { border-color: var(--focus); }
+    .settings .io .btn { flex: 1; padding: 3px 6px; }
     .settings select, .settings input { font: inherit; }
     /* Dropdowns and the number box share one width, so the right column lines up */
     .settings select, .settings input[type="number"] { width: 8.5em; height: 1.8em; flex: none; }
@@ -211,7 +212,7 @@ Link your main notes here
       #main { flex: none; padding: 16px; }
       .tiddler { padding: 24px 20px 28px; }
       .title-input { font-size: 1.9em; }
-      #sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; }
+      #sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; align-items: center; } /* column centered below the note */
       #note-list { max-height: none; }
     }
   </style>
@@ -234,7 +235,6 @@ Link your main notes here
     </div>
 
     <div class="visits" id="visits"></div>
-    <div class="footer" data-l10n="footer">© 2026 TiddlyWiki Slim. MIT License</div>
   </main>
 
   <aside id="sidebar">
@@ -243,7 +243,7 @@ Link your main notes here
         <button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
         <button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       </div>
-      <button id="export-btn" class="export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
+      <button id="export-btn" class="btn export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
       <span class="save-note" data-l10n="saved">Saved successfully</span>
     </div>
 
@@ -264,8 +264,8 @@ Link your main notes here
         <input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint"></label>
       <div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
       <div class="io">
-        <button type="button" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
-        <button type="button" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
+        <button type="button" class="btn" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
+        <button type="button" class="btn" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
       </div>
     </form>
     <input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)">
@@ -275,6 +275,8 @@ Link your main notes here
     <div class="tag-cloud" id="tag-cloud"></div>
 
     <ul id="note-list"></ul>
+
+    <div class="footer" data-l10n="footer">© 2026 TiddlyWiki Slim. MIT License</div>
   </aside>
 
   <script>

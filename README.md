@@ -1,6 +1,6 @@
 # TiddlyWiki Slim
 
-Slim version of TiddlyWiki — empty file size is around 22 KB.
+Slim version of TiddlyWiki — empty file size is less than 50 KB.
 
 ## Why
 
