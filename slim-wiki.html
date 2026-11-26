@@ -78,7 +78,7 @@ Link your main notes here
       font: inherit; font-size: 2.35em; line-height: 1.25; font-weight: 400; color: var(--title);
       border: 1px solid transparent; border-radius: 3px; padding: 0 8px; margin-left: -9px;
     }
-    .title-input[readonly] { cursor: default; }
+    .title-input[readonly] { cursor: default; color: var(--muted); }
     /* Edit mode: framed like the content editor. Both boxes sit 9px left of the
        content edge (1px border + 8px padding), so their borders line up and the
        text stays where it is in view mode. */
@@ -313,15 +313,10 @@ Link your main notes here
     const timeOf = n => Date.parse(n.updated) || 0;
     const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
 
-    const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    // "29th January 2025 at 9:14pm", in local time
+    // Browser's default date+time format for the user's locale, in local time
     function formatUpdated(iso) {
       const d = new Date(iso);
-      if (!iso || isNaN(d)) return '';
-      const day = d.getDate();
-      const sfx = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[day % 10] || 'th');
-      const hh = d.getHours() % 12 || 12, mm = String(d.getMinutes()).padStart(2, '0');
-      return `${day}${sfx} ${MONTHS[d.getMonth()]} ${d.getFullYear()} at ${hh}:${mm}${d.getHours() < 12 ? 'am' : 'pm'}`;
+      return !iso || isNaN(d) ? '' : d.toLocaleString();
     }
 
     // Start page: always opened on load, and recreated on load
