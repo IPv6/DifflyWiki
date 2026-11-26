@@ -29,6 +29,7 @@ Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, T
 * Index note is the one with hardcoded id ".index". Recreated at start if not found
 * Localizable STRINGS collected in one place for easy localization
 * Note contents are wrapped in CDATA on export (nothing escaped)
+* Tag-like words in `fenced` text and http links are not counted as tags
 
 # Soon
 

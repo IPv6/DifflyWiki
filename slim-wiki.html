@@ -17,8 +17,8 @@ This is a **zero-dependency, single-file HTML wiki** with Markdown support
 * Html <u>also can be used</u> (warning: <span style="color: red;">no sanitization</span>)
 
 ```
-**Raw* `code` block
-without *md-parsing*
+**Raw* `code` block without *md-parsing*
+Tags are also ignored here: #not-a-tag
 ```
 
 **This** `note` can be safely *deleted*
@@ -103,6 +103,10 @@ Link your main notes here
     #viewer h2 { font-size: 1.3em; font-weight: 400; color: var(--title); line-height: 1.3; }
     #viewer h1 + br, #viewer h2 + br, #viewer hr + br { display: none; } /* block already ends the line */
     #viewer hr { border: none; border-top: 1px solid #999; margin: 0.6em 0; }
+    #viewer code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.88em; background: #f2f2f2; border-radius: 3px; padding: 0.1em 0.35em; }
+    #viewer pre { background: #f6f6f6; border: 1px solid #e4e4e4; border-radius: 3px; padding: 8px 12px; margin: 0.3em 0; overflow-x: auto; line-height: 1.45; }
+    #viewer pre code { background: none; padding: 0; }
+    #viewer pre + br { display: none; } /* the block already ends the line */
     #editor {
       display: none; width: calc(100% + 18px); margin: 0 -9px; min-height: 420px; resize: vertical;
       font: 13.5px/1.5 ui-monospace, Menlo, Consolas, monospace; color: var(--text);
@@ -413,19 +417,37 @@ Link your main notes here
     const subEl = document.getElementById('note-sub');
     const exportBtn = document.getElementById('export-btn');
 
+    // #tag, #this-is-tag, #this_is_also_tag; a hyphen only between word chars,
+    // so "#tag-" or "#tag - text" stops before the dash
+    const TAG_RE = /#[\w가-힣]+(?:-[\w가-힣]+)*/g;
+    const CODE_BLOCK_RE = /^```[^\n]*\n([\s\S]*?)^```[ \t]*$/gm; // ```lang ... ``` on their own lines
+    const INLINE_CODE_RE = /`([^`\n]+)`/g;
+    const escHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Tags of a note, ignoring anything written inside code
+    const tagsOf = text => text.replace(CODE_BLOCK_RE, '').replace(INLINE_CODE_RE, '').match(TAG_RE) || [];
+
     function parseMarkdown(text) {
       if (!text) return "";
+      // Code is set aside first, so none of the rules below touch it, and put
+      // back (HTML-escaped) at the very end. Placeholders use private-use chars.
+      const stash = [];
+      const keep = html => `\uE000${stash.push(html) - 1}\uE001`;
       return text
+        .replace(CODE_BLOCK_RE, (m, code) => keep(`<pre><code>${escHtml(code.replace(/\n$/, ''))}</code></pre>`))
+        .replace(INLINE_CODE_RE, (m, code) => keep(`<code>${escHtml(code)}</code>`))
         .replace(/^# (.*$)/gim, '<h1>$1</h1>')
         .replace(/^## (.*$)/gim, '<h2>$1</h2>')
         .replace(/^\* (.*$)/gim, '• $1')                   // bullets first: their "* " is not emphasis
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')   // bold before italic, so ** isn't split
         .replace(/\*([^*\s](?:[^*\n]*[^*\s])?)\*/g, '<i>$1</i>') // *x* but not "a * b * c"
         .replace(/^---$/gm, '<hr>')
-        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, '<a href="$2" target="_blank" class="ext-link">$1</a>')
-        .replace(/(#[a-zA-Z0-9가-힣]+)/g, '<span class="wiki-tag">$1</span>')
+        // Finished links are set aside too, so a #anchor in the address isn't taken for a tag
+        .replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, (m, label, url) =>
+          keep(`<a href="${url.replace(/"/g, '%22')}" target="_blank" class="ext-link">${label}</a>`))
+        .replace(TAG_RE, '<span class="wiki-tag">$&</span>')
         .replace(/\[\[(.*?)\]\]/g, (m, target) => `<span class="wiki-link" onclick="navigateTo('${target}')">${target}</span>`)
-        .replace(/\n/g, '<br>');
+        .replace(/\n/g, '<br>')
+        .replace(/\uE000(\d+)\uE001/g, (m, i) => stash[i]);
     }
 
     function loadNote(id) {
@@ -459,7 +481,7 @@ Link your main notes here
       listEl.innerHTML = "";
       
       const allTags = new Set();
-      db.forEach(n => (n.content.match(/(#[a-zA-Z0-9가-힣]+)/g) || []).forEach(t => allTags.add(t)));
+      db.forEach(n => tagsOf(n.content).forEach(t => allTags.add(t)));
       
       tagCloudEl.innerHTML = "";
       [...allTags].sort((a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b)).forEach(tag => {
@@ -486,7 +508,7 @@ Link your main notes here
 
       byRecent().filter(n => {
         const matchSearch = n.title.toLowerCase().includes(search) || n.content.toLowerCase().includes(search);
-        const noteTags = n.content.match(/(#[a-zA-Z0-9가-힣]+)/g) || [];
+        const noteTags = tagsOf(n.content);
         const matchTags = Array.from(selectedTags).every(st => noteTags.includes(st));
 
         return matchSearch && matchTags;
