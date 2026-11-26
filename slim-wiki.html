@@ -148,7 +148,7 @@ Link your main notes here
     /* Toast after saving: full-width stripe over everything at the top of the screen */
     .save-toast {
       position: fixed; top: 0; left: 0; width: 100%; z-index: 1000;
-      padding: 10px 16px; text-align: center; font-weight: 600;
+      padding: 10px 16px; text-align: center; font-weight: 600; cursor: pointer; /* tap to hide */
       background: #fff; color: #2e9e44; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
     }
     /* Text buttons: Save, Import JSON, Export JSON */
@@ -220,7 +220,7 @@ Link your main notes here
   </style>
 </head>
 <body>
-  <div class="save-toast" id="save-toast" data-l10n="saved" hidden="">Saved successfully</div>
+  <div class="save-toast" id="save-toast" data-l10n="saved" hidden="" onclick="hideSavedToast()">Saved successfully</div>
 
   <main id="main">
     <div class="tiddler">
@@ -228,7 +228,8 @@ Link your main notes here
         <input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()">
         <div class="tiddler-controls">
           <button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
-          <button class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
+          <button id="delete-btn" class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
+          <button id="close-btn" class="icon-btn" title="Close" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
       </div>
       <div class="tiddler-sub" id="note-sub"></div>
@@ -296,6 +297,7 @@ Link your main notes here
       edit: 'Edit',
       done: 'Done',
       delete: 'Delete',
+      close: 'Close',
       newNote: 'New note',
       export: 'Save',
       exportHint: 'Download this wiki as HTML',
@@ -517,7 +519,12 @@ Link your main notes here
       toast.hidden = false;
       placeSavedToast();
       clearTimeout(savedToastTimer);
-      savedToastTimer = setTimeout(() => { toast.hidden = true; }, SAVED_TOAST_MS);
+      savedToastTimer = setTimeout(hideSavedToast, SAVED_TOAST_MS);
+    }
+
+    function hideSavedToast() {
+      clearTimeout(savedToastTimer);
+      document.getElementById('save-toast').hidden = true;
     }
 
     // Keep the toast on the visible part of the page, also when a phone is pinch-zoomed
@@ -692,6 +699,8 @@ Link your main notes here
       editorEl.value = note.content;
       subEl.textContent = formatUpdated(note.updated);
       viewerEl.innerHTML = parseMarkdown(note.content);
+      // The start page can't be deleted or closed from its card
+      for (const btn of ['delete-btn', 'close-btn']) document.getElementById(btn).hidden = id === INDEX_ID;
       renderList();
       window.scrollTo(0, 0); // a newly opened note is read from its top
     }
@@ -894,6 +903,17 @@ Link your main notes here
       visits = visits.filter(v => v !== currentId);
       // Next: the index note if it still exists, else the most recently updated one
       loadNote((db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
+    }
+
+    // Close: back to the previously visited note that still exists, else the index note.
+    // The closed note leaves the visit history, so repeated closes walk back through it.
+    function closeNote() {
+      const prev = visits.slice(1).find(id => db.some(n => n.id === id))
+        || (db.some(n => n.id === INDEX_ID) ? INDEX_ID : null);
+      if (!prev || prev === currentId) return; // already at the start page
+      if (isEditing) toggleEdit();
+      visits = visits.filter(v => v !== currentId);
+      loadNote(prev);
     }
 
     function navigateTo(title) {
