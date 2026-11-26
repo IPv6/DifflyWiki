@@ -809,6 +809,7 @@ Link your main notes here
 		if (!note) return;
 		if (db.length <= 1) return alert(t('cannotDeleteLast'));
 		if (!confirm(t('confirmDelete', { title: note.title || t('untitled') }))) return;
+		if (isEditing) toggleEdit(); // the next note opens for reading
 		db = db.filter(n => n.id !== currentId);
 		visits = visits.filter(v => v !== currentId);
 		// Next: the index note if it still exists, else the most recently updated one
