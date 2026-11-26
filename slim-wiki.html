@@ -144,7 +144,11 @@ Link your main notes here
     /* One shared column: controls, tags, search and list all end at the same right edge */
     #sidebar > * { width: 100%; max-width: var(--side-col); }
     #sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); } /* offsets its -4px left margin */
-    .page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; }
+    .page-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 14px -4px; min-height: 40px; }
+    /* After saving, the row shows only a green notice for a few seconds */
+    .save-note { display: none; padding-left: 4px; color: #2e9e44; font-weight: 600; }
+    .page-controls.saved > * { display: none; }
+    .page-controls.saved > .save-note { display: block; }
     .export-btn { background: none; border: none; cursor: pointer; padding: 4px 0; font-size: 0.95em; color: var(--muted); }
     .export-btn:hover { color: var(--text); }
     .export-btn.dirty { color: #d23c3c; }
@@ -240,6 +244,7 @@ Link your main notes here
         <button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       </div>
       <button id="export-btn" class="export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
+      <span class="save-note" data-l10n="saved">Saved successfully</span>
     </div>
 
     <form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
@@ -322,6 +327,7 @@ Link your main notes here
       exportJson: 'Export JSON',
       importDone: 'Imported: {added} new, {replaced} replaced, {skipped} skipped',
       importFailed: 'Import failed: {error}',
+      saved: 'Saved successfully',
     };
 
     // t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
@@ -484,21 +490,29 @@ Link your main notes here
       a.remove();
     }
 
-    // Inside Tiddloid (Android) the page gets a "twi" bridge: it saves the opened file
-    // in place, and shows a "save as" dialog for other files. Blob downloads don't work there.
-    const twiBridge = () => window.twi && typeof window.twi.saveWiki === 'function' ? window.twi : null;
-
+    // The TW5 compatibility shim (end of script) may take over saving: $tw.slim.save*()
+    // return true when they handled it (inside Tiddloid). Otherwise: a normal download.
     function downloadText(text, filename, type) {
-      if (twiBridge() && typeof twiBridge().saveDownload === 'function') twiBridge().saveDownload(text, filename);
-      else download(new Blob([text], { type }), filename);
+      if (!window.$tw?.slim?.saveDownload(text, filename)) download(new Blob([text], { type }), filename);
     }
 
     function downloadSelf() {
       const html = buildExportHtml();
-      if (twiBridge()) twiBridge().saveWiki(html);
-      else download(new Blob([html], { type: 'text/html' }), exportFilename());
+      if (!window.$tw?.slim?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
       savedSignature = changeSignature();
       updateExportState();
+      showSavedNote();
+    }
+
+    // Green "Saved successfully" in place of the icon row for 3 s. Each save restarts
+    // the timer, so repeated saves can't leave it stuck: it clears 3 s after the last one.
+    const SAVED_NOTE_MS = 3000;
+    let savedNoteTimer = null;
+    function showSavedNote() {
+      const row = document.querySelector('.page-controls');
+      row.classList.add('saved');
+      clearTimeout(savedNoteTimer);
+      savedNoteTimer = setTimeout(() => row.classList.remove('saved'), SAVED_NOTE_MS);
     }
 
     // === TW5 JSON IMPORT/EXPORT ===
@@ -929,6 +943,21 @@ Link your main notes here
         config: { contentTypeInfo: {} },
         Wiki: { tiddlerDeserializerModules: {} },
         saverHandler: { isDirty: () => hasUnsavedChanges(), saveWiki: () => downloadSelf() },
+        // Page -> app: Tiddloid injects a "twi" bridge that saves the opened file in place
+        // and shows a "save as" dialog for other files (it can't handle blob downloads).
+        // Used by downloadSelf()/downloadText(); true = handled here.
+        slim: {
+          saveWiki(html) {
+            if (typeof window.twi?.saveWiki !== 'function') return false;
+            window.twi.saveWiki(html);
+            return true;
+          },
+          saveDownload(text, filename) {
+            if (typeof window.twi?.saveDownload !== 'function') return false;
+            window.twi.saveDownload(text, filename);
+            return true;
+          },
+        },
         Story: class { navigateTiddler(title) { navigateTo(String(title)); } },
       };
     }
