@@ -11,7 +11,7 @@ Slim version of TiddlyWiki — empty file size is around 22 KB.
 * Tags are auto-discovered from note content, sorted A-Z for filtering
 * Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
 
-Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), TiddlyWiki Slim uses an XML vault inside the DOM - similar to TiddlyWiki Classic, but improved.
+Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, TiddlyWiki Slim uses an XML vault. Similar to TiddlyWiki Classic, but improved.
 
 ## Tradeoffs
 * File export only
@@ -28,6 +28,7 @@ Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), Ti
 
 * Index note is the one with hardcoded id ".index". Recreated at start if not found
 * Localizable STRINGS collected in one place for easy localization
+* Note contents are wrapped in CDATA on export (nothing escaped)
 
 # Soon
 
