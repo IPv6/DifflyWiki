@@ -27,11 +27,12 @@ Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, T
 ## More details
 
 * Visits history for fast navigation (instead of TW-like story river)
+* New notes: Customizable title format
+* Index note: the one with hardcoded id ".index". Recreated at start if not found
 * Basic markdown support: formatting, links, `fenced` blocks and inline html
-* Index note is the one with hardcoded id ".index". Recreated at start if not found
-* Localizable STRINGS collected in one place for easy localization
-* Note contents are wrapped in CDATA on export (nothing escaped)
-* Tag-like words in `fenced` blocks and links are not counted as tags
+* Internals: Localizable STRINGS collected in one place for easy localization
+* Internals: Note contents are wrapped in CDATA on export (nothing escaped)
+* Internals: Tag-like words in `fenced` blocks and links are not counted as tags
 
 # Soon
 

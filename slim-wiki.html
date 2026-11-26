@@ -2,7 +2,7 @@
 <html lang="en"><head>
   <meta charset="UTF-8">
   <script id="twslim-vault" type="application/xml">
-<vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below">
+<vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below" newTitle="{YYYY}-{MM}-{DD} Untitled" dateFormat="">
 
 <note id="description" updated="2026-11-25T09:00:00Z">
 <title>Description</title>
@@ -155,6 +155,9 @@ Link your main notes here
     }
     .settings label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .settings label.check { justify-content: flex-start; }
+    .settings label.wide { flex-direction: column; align-items: stretch; gap: 3px; }
+    .settings input[type="text"] { width: 100%; height: 1.8em; padding: 0 4px; }
+    .settings .hint { color: var(--muted); }
     .settings select, .settings input { font: inherit; }
     /* Dropdowns and the number box share one width, so the right column lines up */
     .settings select, .settings input[type="number"] { width: 8.5em; height: 1.8em; flex: none; }
@@ -237,6 +240,11 @@ Link your main notes here
         <select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
       <label><span data-l10n="visitsCap">Recent visits to keep</span>
         <input type="number" name="visitsCap" min="1" max="100"></label>
+      <label class="wide"><span data-l10n="newTitleFormat">New note title</span>
+        <input type="text" name="newTitle"></label>
+      <label class="wide"><span data-l10n="dateFormat">Date format</span>
+        <input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint"></label>
+      <div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
     </form>
 
     <input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
@@ -270,7 +278,7 @@ Link your main notes here
       confirmDelete: 'Delete note "{title}"?',
       cannotDeleteLast: 'Cannot delete the last note.',
       untitled: 'Untitled',
-      newNoteTitle: 'Untitled Tiddler',
+      newNoteTitle: '{YYYY}-{MM}-{DD} Untitled', // default for the "New note title" setting
       newNoteContent: '# New Note\n\nStart writing... #draft',
       linkNoteContent: '# {title}\n\nCreated via WikiLink.',
       indexTitle: 'Index',
@@ -288,6 +296,10 @@ Link your main notes here
       visitsPlace: 'Recent visits',
       placeBelow: 'Below note',
       placeAbove: 'Above note',
+      newTitleFormat: 'New note title',
+      dateFormat: 'Date format',
+      dateFormatHint: 'Browser default',
+      formatHelp: 'Placeholders: {YYYY} {MM} {DD} {H} {M} {S}',
     };
 
     // t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
@@ -345,7 +357,11 @@ Link your main notes here
       showSearch: ['true', ['true', 'false']],
       visitsCap: ['20', v => /^\d{1,3}$/.test(v) && +v >= 1 && +v <= 100],
       visitsPlace: ['below', ['below', 'above']],
+      newTitle: [STRINGS.newNoteTitle, isFormat], // empty: use the default above
+      dateFormat: ['', isFormat],                 // empty: browser's own format
     };
+    function isFormat(v) { return v.length <= 200 && !/[\x00-\x1F]/.test(v); }
+
     function validSetting(key, value) {
       const rule = SETTINGS[key][1];
       return value != null && (Array.isArray(rule) ? rule.includes(value) : rule(value));
@@ -463,10 +479,20 @@ Link your main notes here
     const timeOf = n => Date.parse(n.updated) || 0;
     const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
 
-    // Browser's default date+time format for the user's locale, in local time
+    // Fills {YYYY} {MM} {DD} {H} {M} {S} from a date, in local time; all but the
+    // year are two digits. Other text, and unknown {names}, are kept as is.
+    function formatDate(format, d) {
+      const two = n => String(n).padStart(2, '0');
+      const parts = { YYYY: d.getFullYear(), MM: two(d.getMonth() + 1), DD: two(d.getDate()),
+                      H: two(d.getHours()), M: two(d.getMinutes()), S: two(d.getSeconds()) };
+      return format.replace(/\{(YYYY|MM|DD|H|M|S)\}/g, (m, k) => parts[k]);
+    }
+
+    // Subtitle date: the "Date format" setting, or the browser's default for the user's locale
     function formatUpdated(iso) {
       const d = new Date(iso);
-      return !iso || isNaN(d) ? '' : d.toLocaleString();
+      if (!iso || isNaN(d)) return '';
+      return settings.dateFormat ? formatDate(settings.dateFormat, d) : d.toLocaleString();
     }
 
     // Start page: always opened on load, and recreated on load
@@ -652,6 +678,8 @@ Link your main notes here
       card.parentNode.insertBefore(visitsEl, settings.visitsPlace === 'above' ? card : card.nextSibling);
       visitsEl.classList.toggle('above', settings.visitsPlace === 'above');
       visits = visits.slice(0, +settings.visitsCap);
+      const note = db.find(n => n.id === currentId);
+      if (note) subEl.textContent = formatUpdated(note.updated);
       renderList();
     }
 
@@ -714,7 +742,7 @@ Link your main notes here
     }
 
     function createNewNote() {
-      const newNote = { id: 'note_' + Date.now(), updated: nowIso(), title: t('newNoteTitle'), content: t('newNoteContent') };
+      const newNote = { id: 'note_' + Date.now(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()), content: t('newNoteContent') };
       db.unshift(newNote);
       loadNote(newNote.id);
       if (!isEditing) toggleEdit();
