@@ -12,8 +12,6 @@ Slim version of TiddlyWiki — empty file size is less than 50 KB.
 * Import/Export in TW5 json format
 * Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
 
-Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, TiddlyWiki Slim uses an XML vault. Similar to TiddlyWiki Classic, but improved.
-
 ## Tradeoffs
 * File export only
 * Basic markdown only
@@ -31,8 +29,10 @@ Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, T
 * New notes: Customizable title format
 * Index note: the one with hardcoded id ".index". Recreated at start if not found
 * Basic markdown support: formatting, links, `fenced` blocks and inline html
+* Internals: Unlike TiddlyWiki5 and FeatherWiki (which serialize content as a JSON string), TiddlyWiki Slim uses an XML vault
+  * In some ways, it is similar to TiddlyWiki Classic, though improved
+* Internals: Note contents are wrapped in CDATA on export (no escaped entities in the exported content)
 * Internals: Localizable STRINGS collected in one place for easy localization
-* Internals: Note contents are wrapped in CDATA on export (nothing escaped)
 * Internals: Tag-like words in `fenced` blocks and links are not counted as tags
 * Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
   * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
