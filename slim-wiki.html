@@ -156,7 +156,9 @@ Link your main notes here
     .settings label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .settings label.check { justify-content: flex-start; }
     .settings select, .settings input { font: inherit; }
-    .settings input[type="number"] { width: 4.5em; padding: 1px 4px; }
+    /* Dropdowns and the number box share one width, so the right column lines up */
+    .settings select, .settings input[type="number"] { width: 8.5em; height: 1.8em; flex: none; }
+    .settings input[type="number"] { padding: 0 4px; }
 
     #search {
       font: inherit; font-size: 0.85em; color: var(--text); background: #fff;
@@ -225,16 +227,16 @@ Link your main notes here
     </div>
 
     <form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
-      <label><span data-l10n="sortBy">Sort notes by</span>
-        <select name="sort"><option value="date" data-l10n="sortDate">Date updated</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
-      <label><span data-l10n="sortOrder">Order</span>
-        <select name="order"><option value="desc" data-l10n="orderDesc">Descending</option><option value="asc" data-l10n="orderAsc">Ascending</option></select></label>
       <label class="check"><input type="checkbox" name="showTags"><span data-l10n="showTags">Show tags filter</span></label>
       <label class="check"><input type="checkbox" name="showSearch"><span data-l10n="showSearch">Show search</span></label>
-      <label><span data-l10n="visitsCap">Recent visits to keep</span>
-        <input type="number" name="visitsCap" min="1" max="100"></label>
+      <label><span data-l10n="sortBy">Sort notes by</span>
+        <select name="sort"><option value="date" data-l10n="sortDate">Date</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
+      <label><span data-l10n="sortOrder">Order</span>
+        <select name="order"><option value="desc" data-l10n="orderDesc">Descending</option><option value="asc" data-l10n="orderAsc">Ascending</option></select></label>
       <label><span data-l10n="visitsPlace">Recent visits</span>
         <select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
+      <label><span data-l10n="visitsCap">Recent visits to keep</span>
+        <input type="number" name="visitsCap" min="1" max="100"></label>
     </form>
 
     <input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
@@ -275,7 +277,7 @@ Link your main notes here
       indexContent: '# Start page of this wiki\nLink your main notes here',
       settings: 'Settings',
       sortBy: 'Sort notes by',
-      sortDate: 'Date updated',
+      sortDate: 'Date',
       sortTitle: 'Title',
       sortOrder: 'Order',
       orderDesc: 'Descending',
