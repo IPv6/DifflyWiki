@@ -122,7 +122,13 @@ Link your main notes here
     }
 
     .visits { margin-top: 14px; padding-left: 4px; font-size: 0.9em; line-height: 1.7; color: var(--muted); }
-    .visits.above { margin: 0 0 14px; }
+    /* Above the note: one line exactly as tall as the sidebar's icon row (40px),
+       starting where it starts (sidebar top padding is 4px less than #main's),
+       so the card's top lines up with the settings panel / search below the icons */
+    .visits.above {
+      height: 40px; line-height: 40px; margin: -4px 0 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .visits .visit { color: var(--link); cursor: pointer; }
     .visits .visit:hover { text-decoration: underline; }
     .visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
