@@ -34,7 +34,9 @@ Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, T
 * Internals: Localizable STRINGS collected in one place for easy localization
 * Internals: Note contents are wrapped in CDATA on export (nothing escaped)
 * Internals: Tag-like words in `fenced` blocks and links are not counted as tags
-* Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android): in-place save, exit warning, share-to-wiki
+* Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
+  * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
+  * Reports Index note title/content as Wiki name/description
 
 ## Inspired by
 * Teddy Wiki Lite from https://github.com/crystal-world-project/crystal-world
