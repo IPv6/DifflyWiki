@@ -43,6 +43,7 @@ Link your main notes here
 </vault>
   </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="application-name" content="TiddlyWiki">
   <title>TiddlyWiki Slim</title>
   <style>
     :root {
@@ -238,7 +239,7 @@ Link your main notes here
         <button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
         <button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
       </div>
-      <button id="export-btn" class="export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Export</button>
+      <button id="export-btn" class="export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
     </div>
 
     <form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
@@ -287,7 +288,7 @@ Link your main notes here
       done: 'Done',
       delete: 'Delete',
       newNote: 'New note',
-      export: 'Export',
+      export: 'Save',
       exportHint: 'Download this wiki as HTML',
       exportHintDirty: 'Unsaved changes: download this wiki as HTML',
       clearTags: 'Clear tag filter',
@@ -483,8 +484,19 @@ Link your main notes here
       a.remove();
     }
 
+    // Inside Tiddloid (Android) the page gets a "twi" bridge: it saves the opened file
+    // in place, and shows a "save as" dialog for other files. Blob downloads don't work there.
+    const twiBridge = () => window.twi && typeof window.twi.saveWiki === 'function' ? window.twi : null;
+
+    function downloadText(text, filename, type) {
+      if (twiBridge() && typeof twiBridge().saveDownload === 'function') twiBridge().saveDownload(text, filename);
+      else download(new Blob([text], { type }), filename);
+    }
+
     function downloadSelf() {
-      download(new Blob([buildExportHtml()], { type: 'text/html' }), exportFilename());
+      const html = buildExportHtml();
+      if (twiBridge()) twiBridge().saveWiki(html);
+      else download(new Blob([html], { type: 'text/html' }), exportFilename());
       savedSignature = changeSignature();
       updateExportState();
     }
@@ -505,8 +517,7 @@ Link your main notes here
         tw.id = n.id;
         return tw;
       });
-      download(new Blob([JSON.stringify(tiddlers, null, 4) + '\n'], { type: 'application/json' }),
-               exportFilename().replace(/\.html?$/i, '.json'));
+      downloadText(JSON.stringify(tiddlers, null, 4) + '\n', exportFilename().replace(/\.html?$/i, '.json'), 'application/json');
     }
 
     function importJsonFile(input) {
@@ -517,8 +528,15 @@ Link your main notes here
 
     function importJson(text) {
       const data = JSON.parse(text);
+      importTiddlers(Array.isArray(data) ? data : [data]);
+    }
+
+    // Adds TW5-style tiddlers ({ title, text, modified, created, id }) as notes.
+    // quiet: report only if something was actually imported (Tiddloid imports its
+    // own plugin on every load; that is a "$:/" tiddler and is always skipped).
+    function importTiddlers(list, { quiet = false } = {}) {
       let added = 0, replaced = 0, skipped = 0;
-      (Array.isArray(data) ? data : [data]).forEach(tw => {
+      list.forEach(tw => {
         // TW5 system tiddlers ("$:/...") are settings/plugins, not notes
         if (!tw || typeof tw.title !== 'string' || tw.title.startsWith('$:/')) { skipped++; return; }
         const note = {
@@ -532,7 +550,7 @@ Link your main notes here
       });
       if (added + replaced) savedSignature = null; // a replaced note may keep its date: still unsaved
       loadNote(db.some(n => n.id === currentId) ? currentId : (db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
-      alert(t('importDone', { added, replaced, skipped }));
+      if (!quiet || added + replaced) alert(t('importDone', { added, replaced, skipped }));
     }
 
     // === CORE STATE ===
@@ -818,8 +836,9 @@ Link your main notes here
       if (isEditing) editorEl.focus();
     }
 
-    function createNewNote() {
-      const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()), content: t('newNoteContent') };
+    function createNewNote(content) {
+      const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()),
+                        content: typeof content === 'string' ? content : t('newNoteContent') };
       db.unshift(newNote);
       loadNote(newNote.id);
       if (!isEditing) toggleEdit();
@@ -843,6 +862,63 @@ Link your main notes here
         db.unshift(target);
       }
       loadNote(target.id);
+    }
+
+    // === TW5 COMPATIBILITY (Tiddloid) ===
+    // Tiddloid (Android TiddlyWiki app) recognises a wiki by <meta name="application-name"
+    // content="TiddlyWiki"> and then drives it through TiddlyWiki 5 globals. This minimal
+    // $tw answers exactly the calls it makes (see its res/values/strings.xml, "js_*"):
+    // info for the toolbar, isDirty/saveWiki, new note from shared text, file import, links.
+    if (!window.$tw) {
+      // Palette lookup: page-background colours Tiddloid's toolbar like the page
+      const TW_TEXT = {
+        '$:/SiteTitle': () => t('appTitle'),
+        '$:/SiteSubtitle': () => '',
+        '$:/config/Tiddloid/ApplyTheme': () => 'yes',
+        '$:/palette': () => '$:/palettes/Slim',
+        '$:/palettes/Slim': () => 'page-background: #f4f4f4',
+      };
+      const parseFields = text => {
+        const fields = {};
+        String(text || '').split('\n').forEach(line => {
+          const at = line.indexOf(':');
+          if (at > 0) fields[line.slice(0, at).trim()] = line.slice(at + 1).trim();
+        });
+        return fields;
+      };
+      // Event sent by Tiddloid's <$navigator> widget calls
+      const handleTwEvent = e => {
+        if (e.type === 'tm-new-tiddler') createNewNote(String(e.param && e.param.text || '').trim());
+        else if (e.type === 'tm-import-tiddlers') importTiddlers(JSON.parse(e.param), { quiet: true });
+      };
+      const BINARY_TYPE = /^(image\/(?!svg)|audio\/|video\/|application\/(pdf|octet-stream|zip))/;
+      window.$tw = {
+        rootWidget: {},
+        wiki: {
+          getTiddlerText: title => (TW_TEXT[title] ? TW_TEXT[title]() : null),
+          getTiddler: () => undefined,
+          parseText: () => null,
+          makeWidget: () => ({ render() {}, children: [{ children: [{ dispatchEvent: handleTwEvent }] }] }),
+          // Shared files -> tiddlers: TW5 JSON, .tid, or plain text; binary files are skipped
+          deserializeTiddlers(type, text, fields = {}) {
+            if (BINARY_TYPE.test(type || '')) return [];
+            if (type === 'application/json') {
+              try { const data = JSON.parse(text); return Array.isArray(data) ? data : [data]; } catch (e) { /* not JSON: import as text */ }
+            }
+            if (type === 'application/x-tiddler') {
+              const split = String(text).indexOf('\n\n');
+              const head = split < 0 ? text : text.slice(0, split);
+              return [{ ...parseFields(head), text: split < 0 ? '' : text.slice(split + 2) }];
+            }
+            return [{ title: String(fields.title || '').replace(/\.(txt|md|markdown|text)$/i, '') || t('untitled'), text }];
+          },
+        },
+        utils: { parseFields },
+        config: { contentTypeInfo: {} },
+        Wiki: { tiddlerDeserializerModules: {} },
+        saverHandler: { isDirty: () => hasUnsavedChanges(), saveWiki: () => downloadSelf() },
+        Story: class { navigateTiddler(title) { navigateTo(String(title)); } },
+      };
     }
 
     // Wait for the parser to finish so the snapshot includes everything after
