@@ -2,7 +2,7 @@
 <html lang="en"><head>
   <meta charset="UTF-8">
   <script id="twslim-vault" type="application/xml">
-<vault version="1">
+<vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below">
 
 <note id="description" updated="2026-11-25T09:00:00Z">
 <title>Description</title>
@@ -122,6 +122,7 @@ Link your main notes here
     }
 
     .visits { margin-top: 14px; padding-left: 4px; font-size: 0.9em; line-height: 1.7; color: var(--muted); }
+    .visits.above { margin: 0 0 14px; }
     .visits .visit { color: var(--link); cursor: pointer; }
     .visits .visit:hover { text-decoration: underline; }
     .visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
@@ -142,6 +143,20 @@ Link your main notes here
     .export-btn.dirty { color: #d23c3c; }
     .export-btn.dirty:hover { color: #a82020; }
     .page-controls .icon-btn svg { width: 32px; height: 32px; color: #999; }
+    .page-icons { display: flex; align-items: center; gap: 6px; }
+    #settings-btn svg { width: 25.6px; height: 25.6px; } /* 20% smaller than the + icon */
+    .page-icons .icon-btn.on svg { color: #555; }
+    [hidden] { display: none !important; } /* wins over display: flex/grid below */
+
+    /* Settings panel (gear) */
+    .settings {
+      display: grid; gap: 8px; margin: 0 0 14px; padding: 10px 12px; font-size: 0.85em;
+      background: #fff; border: 1px solid var(--rule); border-radius: 4px;
+    }
+    .settings label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .settings label.check { justify-content: flex-start; }
+    .settings select, .settings input { font: inherit; }
+    .settings input[type="number"] { width: 4.5em; padding: 1px 4px; }
 
     #search {
       font: inherit; font-size: 0.85em; color: var(--text); background: #fff;
@@ -202,9 +217,25 @@ Link your main notes here
 
   <aside id="sidebar">
     <div class="page-controls">
-      <button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
+      <div class="page-icons">
+        <button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
+        <button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+      </div>
       <button id="export-btn" class="export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Export</button>
     </div>
+
+    <form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
+      <label><span data-l10n="sortBy">Sort notes by</span>
+        <select name="sort"><option value="date" data-l10n="sortDate">Date updated</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
+      <label><span data-l10n="sortOrder">Order</span>
+        <select name="order"><option value="desc" data-l10n="orderDesc">Descending</option><option value="asc" data-l10n="orderAsc">Ascending</option></select></label>
+      <label class="check"><input type="checkbox" name="showTags"><span data-l10n="showTags">Show tags filter</span></label>
+      <label class="check"><input type="checkbox" name="showSearch"><span data-l10n="showSearch">Show search</span></label>
+      <label><span data-l10n="visitsCap">Recent visits to keep</span>
+        <input type="number" name="visitsCap" min="1" max="100"></label>
+      <label><span data-l10n="visitsPlace">Recent visits</span>
+        <select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
+    </form>
 
     <input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
 
@@ -242,6 +273,19 @@ Link your main notes here
       linkNoteContent: '# {title}\n\nCreated via WikiLink.',
       indexTitle: 'Index',
       indexContent: '# Start page of this wiki\nLink your main notes here',
+      settings: 'Settings',
+      sortBy: 'Sort notes by',
+      sortDate: 'Date updated',
+      sortTitle: 'Title',
+      sortOrder: 'Order',
+      orderDesc: 'Descending',
+      orderAsc: 'Ascending',
+      showTags: 'Show tags filter',
+      showSearch: 'Show search',
+      visitsCap: 'Recent visits to keep',
+      visitsPlace: 'Recent visits',
+      placeBelow: 'Below note',
+      placeAbove: 'Above note',
     };
 
     // t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
@@ -289,11 +333,33 @@ Link your main notes here
         ? new XMLSerializer().serializeToString(node) : node.textContent).join('');
     }
 
+    // Settings are attributes of <vault>, written in this key order. Each entry is
+    // [default, allowed values or a check]; anything missing or invalid falls back
+    // to the default. Values stay strings, exactly as stored in the file.
+    const SETTINGS = {
+      sort: ['date', ['date', 'title']],
+      order: ['desc', ['desc', 'asc']],
+      showTags: ['true', ['true', 'false']],
+      showSearch: ['true', ['true', 'false']],
+      visitsCap: ['20', v => /^\d{1,3}$/.test(v) && +v >= 1 && +v <= 100],
+      visitsPlace: ['below', ['below', 'above']],
+    };
+    function validSetting(key, value) {
+      const rule = SETTINGS[key][1];
+      return value != null && (Array.isArray(rule) ? rule.includes(value) : rule(value));
+    }
+
     function loadVault(el) {
       const xml = new DOMParser().parseFromString(el.textContent.trim(), 'application/xml');
       const err = xml.getElementsByTagName('parsererror')[0];
       if (err) throw new Error('Vault XML is malformed: ' + err.textContent);
-      return Array.from(xml.documentElement.children)
+      const root = xml.documentElement;
+      const settings = {};
+      for (const key in SETTINGS) {
+        const v = root.getAttribute(key);
+        settings[key] = validSetting(key, v) ? v : SETTINGS[key][0];
+      }
+      const notes = Array.from(root.children)
         .filter(e => e.localName === 'note')
         .map(n => ({
           id: n.getAttribute('id'),
@@ -301,6 +367,7 @@ Link your main notes here
           title: childText(n, 'title'),
           content: childMarkup(n, 'content').trim()
         }));
+      return { notes, settings };
     }
 
     // Note content goes in CDATA, so HTML and markdown stay readable in the file.
@@ -338,8 +405,9 @@ Link your main notes here
     // Canonical form: loading this and serializing again yields the identical string.
     // Content goes on its own lines; it is trimmed here and on load, so stray
     // leading/trailing whitespace from the editor can't make exports drift.
-    function serializeVault(notes) {
-      return '\n<vault version="1">\n\n' + [...notes].sort(fileOrder).map(n =>
+    function serializeVault(notes, settings) {
+      const attrs = Object.keys(SETTINGS).map(k => ` ${k}="${xmlEscape(settings[k], true)}"`).join('');
+      return `\n<vault version="1"${attrs}>\n\n` + [...notes].sort(fileOrder).map(n =>
         `<note id="${xmlEscape(n.id, true)}" updated="${xmlEscape(n.updated || '', true)}">\n` +
         `<title>${xmlEscape(n.title)}</title>\n` +
         `<content>${cdata(n.content.trim())}</content>\n` +
@@ -363,7 +431,7 @@ Link your main notes here
 
     function buildExportHtml() {
       const root = pristineRoot.cloneNode(true);
-      root.querySelector('#' + VAULT_ID).textContent = serializeVault(db);
+      root.querySelector('#' + VAULT_ID).textContent = serializeVault(db, settings);
       return '<!DOCTYPE html>\n' + root.outerHTML;
     }
 
@@ -380,11 +448,12 @@ Link your main notes here
     }
 
     // === CORE STATE ===
-    let db = loadVault(document.getElementById(VAULT_ID));
+    let { notes: db, settings } = loadVault(document.getElementById(VAULT_ID));
 
     // Unsaved-changes tracking: the set of (id, updated) pairs as of the last
     // load/export. Any edit, new note or deletion changes it, and Export turns red.
-    const changeSignature = () => db.map(n => n.id + '\u0000' + n.updated).sort().join('\n');
+    // Settings count too: they are saved in the file.
+    const changeSignature = () => db.map(n => n.id + '\u0000' + n.updated).sort().join('\n') + '\n' + JSON.stringify(settings);
     let savedSignature = changeSignature(); // taken before .index may be auto-created
 
     // "updated" is stored as ISO 8601 UTC, e.g. 2026-11-25T21:40:00Z
@@ -463,7 +532,7 @@ Link your main notes here
       currentId = id;
       const note = db.find(n => n.id === id);
       if (!note) return;
-      visits = [id, ...visits.filter(v => v !== id)];
+      visits = [id, ...visits.filter(v => v !== id)].slice(0, +settings.visitsCap);
 
       titleEl.value = note.title;
       editorEl.value = note.content;
@@ -516,7 +585,7 @@ Link your main notes here
         tagCloudEl.appendChild(none);
       }
 
-      byRecent().filter(n => {
+      listOrder().filter(n => {
         const matchSearch = n.title.toLowerCase().includes(search) || n.content.toLowerCase().includes(search);
         const noteTags = tagsOf(n.content);
         const matchTags = Array.from(selectedTags).every(st => noteTags.includes(st));
@@ -531,6 +600,57 @@ Link your main notes here
       });
       renderVisits();
       updateExportState(); // every change path ends in renderList()
+    }
+
+    // === SETTINGS ===
+    // Sidebar list order, from the "sort" and "order" settings
+    function listOrder() {
+      const dir = settings.order === 'asc' ? 1 : -1;
+      const byTitle = (a, b) => cmp(a.title.toLowerCase(), b.title.toLowerCase()) || cmp(a.title, b.title);
+      return [...db].sort(settings.sort === 'title'
+        ? (a, b) => dir * byTitle(a, b)
+        : (a, b) => dir * (timeOf(a) - timeOf(b)));
+    }
+
+    const settingsForm = () => document.getElementById('settings-panel');
+
+    function toggleSettings() {
+      const panel = settingsForm();
+      panel.hidden = !panel.hidden;
+      document.getElementById('settings-btn').classList.toggle('on', !panel.hidden);
+    }
+
+    function fillSettingsForm() {
+      const f = settingsForm().elements;
+      for (const key in SETTINGS) {
+        if (f[key].type === 'checkbox') f[key].checked = settings[key] === 'true';
+        else f[key].value = settings[key];
+      }
+    }
+
+    function readSettingsForm() {
+      const f = settingsForm().elements;
+      for (const key in SETTINGS) {
+        const v = f[key].type === 'checkbox' ? String(f[key].checked) : f[key].value.trim();
+        if (validSetting(key, v)) settings[key] = v;
+      }
+      fillSettingsForm(); // shows the kept value if an entry was invalid
+      applySettings();
+    }
+
+    // Applies settings to the page (the saved file is not touched until Export)
+    function applySettings() {
+      const search = document.getElementById('search');
+      search.hidden = settings.showSearch !== 'true';
+      if (search.hidden) search.value = '';          // no invisible filtering
+      tagCloudEl.hidden = settings.showTags !== 'true';
+      if (tagCloudEl.hidden) selectedTags.clear();
+      const card = document.querySelector('.tiddler');
+      const visitsEl = document.getElementById('visits');
+      card.parentNode.insertBefore(visitsEl, settings.visitsPlace === 'above' ? card : card.nextSibling);
+      visitsEl.classList.toggle('above', settings.visitsPlace === 'above');
+      visits = visits.slice(0, +settings.visitsCap);
+      renderList();
     }
 
     const VISIT_TITLE_MAX = 50;
@@ -623,6 +743,8 @@ Link your main notes here
     document.addEventListener('DOMContentLoaded', () => {
       pristineRoot = document.documentElement.cloneNode(true);
       applyStrings();
+      fillSettingsForm();
+      applySettings();
       loadNote(currentId);
     });
   </script>
