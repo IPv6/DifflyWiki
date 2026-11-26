@@ -4,21 +4,21 @@ Slim version of TiddlyWiki — empty file size is around 22 KB.
 
 ## Why
 
-* Git-diff friendly file format.
+* Git-diff friendly file format
   * Saves notes at the beginning of the file; unmodified exports are byte-identical.
   * Export preserves note formatting and keeps notes sorted alphabetically (A-Z by title)
-* Barebone functionality: Notes (with title+content+update date), Recents, Search (title+content), Tags filter
-* Tags are auto-discovered from note content, sorted A-Z for filtering
+* Barebone functionality: Notes (with title+content+update date), Recents, Visits history, Search (title+content), Tags filter
+* Barebone Tags support. Tags are auto-discovered from note content, sorted A-Z for filtering
 * Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
 
 Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, TiddlyWiki Slim uses an XML vault. Similar to TiddlyWiki Classic, but improved.
 
 ## Tradeoffs
 * File export only
-* Basic settings only
 * Basic markdown only
+* Basic set of settings
 * Default theming only (TiddlyWiki5-like)
-* No plugins, no addons, just hack the source
+* No plugins, no addons, hack the source if needed
 
 # What's next
 
@@ -26,14 +26,15 @@ Unlike TiddlyWiki5 and FeatherWiki - which serialize content as JSON string -, T
 
 ## More details
 
+* Visits history for fast navigation (instead of TW-like story river)
+* Basic markdown support: formatting, links, `fenced` blocks and inline html
 * Index note is the one with hardcoded id ".index". Recreated at start if not found
 * Localizable STRINGS collected in one place for easy localization
 * Note contents are wrapped in CDATA on export (nothing escaped)
-* Tag-like words in `fenced` text and http links are not counted as tags
+* Tag-like words in `fenced` blocks and links are not counted as tags
 
 # Soon
 
-* Visits history block, for fast navigation (instead of story river)
 * Import: TW5 json, TW Classic file
 * Export: TW5 json
 * Compatibility with [Tiddloid](https://github.com/donmor/Tiddloid)

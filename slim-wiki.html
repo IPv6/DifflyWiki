@@ -121,6 +121,11 @@ Link your main notes here
       background: var(--tab); color: #555;
     }
 
+    .visits { margin-top: 14px; padding-left: 4px; font-size: 0.9em; line-height: 1.7; color: var(--muted); }
+    .visits .visit { color: var(--link); cursor: pointer; }
+    .visits .visit:hover { text-decoration: underline; }
+    .visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
+    .visits .sep { margin: 0 7px; color: var(--faint); }
     .footer { color: var(--faint); font-size: 0.8em; margin-top: 14px; padding-left: 4px; }
 
     /* Sidebar */
@@ -191,6 +196,7 @@ Link your main notes here
       <div id="viewer"></div>
     </div>
 
+    <div class="visits" id="visits"></div>
     <div class="footer" data-l10n="footer">© 2026 TiddlyWiki Slim. MIT License</div>
   </main>
 
@@ -408,6 +414,9 @@ Link your main notes here
     let currentId = ensureIndexNote().id;
     let selectedTags = new Set();
     let isEditing = false;
+    // Recently opened notes, newest first. Stored as ids, so renames show up and
+    // deleted notes can be dropped. Kept for this session only, not saved in the file.
+    let visits = [];
 
     const listEl = document.getElementById('note-list');
     const tagCloudEl = document.getElementById('tag-cloud');
@@ -454,6 +463,7 @@ Link your main notes here
       currentId = id;
       const note = db.find(n => n.id === id);
       if (!note) return;
+      visits = [id, ...visits.filter(v => v !== id)];
 
       titleEl.value = note.title;
       editorEl.value = note.content;
@@ -519,7 +529,30 @@ Link your main notes here
         li.onclick = () => loadNote(note.id);
         listEl.appendChild(li);
       });
+      renderVisits();
       updateExportState(); // every change path ends in renderList()
+    }
+
+    const VISIT_TITLE_MAX = 50;
+    function renderVisits() {
+      const el = document.getElementById('visits');
+      el.textContent = '';
+      visits.map(id => db.find(n => n.id === id)).filter(Boolean).forEach((note, i) => {
+        if (i) {
+          const sep = document.createElement('span');
+          sep.className = 'sep';
+          sep.textContent = '·';
+          el.appendChild(sep);
+        }
+        const title = note.title || t('untitled');
+        const chars = Array.from(title); // whole characters, so emoji aren't cut in half
+        const a = document.createElement('span');
+        a.className = 'visit' + (note.id === currentId ? ' current' : '');
+        a.textContent = chars.length > VISIT_TITLE_MAX ? chars.slice(0, VISIT_TITLE_MAX).join('') + '...' : title;
+        if (chars.length > VISIT_TITLE_MAX) a.title = title;
+        if (note.id !== currentId) a.onclick = () => loadNote(note.id);
+        el.appendChild(a);
+      });
     }
 
     const hasUnsavedChanges = () => changeSignature() !== savedSignature;
@@ -571,6 +604,7 @@ Link your main notes here
       if (db.length <= 1) return alert(t('cannotDeleteLast'));
       if (!confirm(t('confirmDelete', { title: note.title || t('untitled') }))) return;
       db = db.filter(n => n.id !== currentId);
+      visits = visits.filter(v => v !== currentId);
       // Next: the index note if it still exists, else the most recently updated one
       loadNote((db.find(n => n.id === INDEX_ID) || byRecent()[0]).id);
     }
