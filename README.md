@@ -14,11 +14,11 @@ Slim version of TiddlyWiki — empty file size is around 22 KB.
 Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), TiddlyWiki Slim uses an XML vault inside the DOM - similar to TiddlyWiki Classic, but improved.
 
 ## Tradeoffs
-* Absolute minimum options
 * File export only
+* Basic settings only
 * Basic markdown only
 * Default theming only (TiddlyWiki5-like)
-* Start note hardcoded to ".index" note
+* Index note with hardcoded id ".index"
 * No plugins, no addons, just hack the source
 
 # What's next
@@ -28,7 +28,7 @@ Unlike TiddlyWiki5 and FeatherWiki (which serialize content as JSON strings), Ti
 # Soon
 
 * Visits history block, for fast navigation (instead of story river)
-* Import: TW5 json, TW Classic file, TW Slim file
+* Import: TW5 json, TW Classic file
 * Export: TW5 json
 * Compatibility with [Tiddloid](https://github.com/donmor/Tiddloid)
 

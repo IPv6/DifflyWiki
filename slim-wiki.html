@@ -10,20 +10,31 @@
 # Start page of this wiki
 Link your main notes here
 
-* [[Disclaimer]]
+* [[Description]]
 </content>
 </note>
 
-<note id="disclaimer" updated="2026-11-25T09:00:00Z">
-<title>Disclaimer</title>
+<note id="description" updated="2026-11-25T09:00:00Z">
+<title>Description</title>
 <content>
-This is a **zero-dependency, single-file HTML wiki**
+
+This is a **zero-dependency, single-file HTML wiki** with Markdown support
+
+# Markdown features
+## Status: partial
+
+* 🔗 Internal link: [[.index]]
+* 🌐 External link and a tag: [GitHub](https://github.com/IPv6/TiddlyWikiSlim) #github
+
+```
+**Raw* `code` block
+without *md-parsing*
+```
+
+**This** `note` can be safely *deleted*
 
 ---
 
-# Origins
-
-🌐 Source [GitHub](https://github.com/IPv6/TiddlyWikiSlim) #github
 🌐 Inspired by Wiki Lite from [crystal-world](https://github.com/crystal-world-project/crystal-world)
 🌐 Inspired by [TiddlyWiki](https://github.com/TiddlyWiki/TiddlyWiki5)
 </content>
@@ -191,14 +202,12 @@ This is a **zero-dependency, single-file HTML wiki**
   </aside>
 
   <script>
-    // ==========================================================================
-    // VAULT (the page is its own database)
+    // === VAULT (the page is its own database) ===
     // Notes live as XML text inside <script id="twslim-vault" type="application/xml">,
     // placed at the top of <head> right after <meta charset> (the charset tag must
     // stay within the first 1024 bytes, or browsers may guess the encoding wrong).
     // Script content is raw text to the HTML parser, so it round-trips byte-for-byte
     // through outerHTML
-    // ==========================================================================
     const VAULT_ID = 'twslim-vault';
     const DEFAULT_FILENAME = 'slim-wiki.html';
 
@@ -234,6 +243,7 @@ This is a **zero-dependency, single-file HTML wiki**
       return attr ? s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;') : s;
     }
 
+	// === EXPORT/IMPORT ===
     // Stable file order: title A→Z (case-insensitive), then newest "updated" first,
     // then id. Plain code-point comparison, not localeCompare, so every browser
     // and system locale writes the same order.
@@ -277,9 +287,19 @@ This is a **zero-dependency, single-file HTML wiki**
       return '<!DOCTYPE html>\n' + root.outerHTML;
     }
 
-    // ==========================================================================
-    // CORE STATE (Set for Multi-Tag Selection)
-    // ==========================================================================
+    function downloadSelf() {
+      const blob = new Blob([buildExportHtml()], { type: "text/html" });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = exportFilename();
+      document.body.appendChild(a); // some Firefox/Safari versions ignore clicks on detached links
+      a.click();
+      a.remove();
+      savedSignature = changeSignature();
+      updateExportState();
+    }
+
+    // === CORE STATE ===
     let db = loadVault(document.getElementById(VAULT_ID));
 
     // Unsaved-changes tracking: the set of (id, updated) pairs as of the last
@@ -470,18 +490,6 @@ This is a **zero-dependency, single-file HTML wiki**
         db.unshift(target);
       }
       loadNote(target.id);
-    }
-
-    function downloadSelf() {
-      const blob = new Blob([buildExportHtml()], { type: "text/html" });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = exportFilename();
-      document.body.appendChild(a); // some Firefox/Safari versions ignore clicks on detached links
-      a.click();
-      a.remove();
-      savedSignature = changeSignature();
-      updateExportState();
     }
 
     // Wait for the parser to finish so the snapshot includes everything after
