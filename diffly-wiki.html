@@ -633,7 +633,9 @@ Link your main notes here
 		
 		const allTags = new Set();
 		db.forEach(n => tagsOf(n.content).forEach(t => allTags.add(t)));
-		
+		// A selected tag that no note has any more can't be seen or unselected: drop it
+		selectedTags.forEach(tag => { if (!allTags.has(tag)) selectedTags.delete(tag); });
+
 		tagCloudEl.innerHTML = "";
 		[...allTags].sort((a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b)).forEach(tag => {
 			const btn = document.createElement('span');
