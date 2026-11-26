@@ -51,6 +51,7 @@ def convert(page):
         title = t.get('title', '')
         if not title or title.startswith('$:/') or 'systemConfig' in t.get('tags', '').split():
             continue
+        t['text'] = t.get('text', '').strip()  # no blank lines or spaces at either end
         for key in ('created', 'modified'):
             if key in t:
                 t[key] = tw5_date(t[key])
