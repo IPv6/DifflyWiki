@@ -1,6 +1,6 @@
 # DifflyWiki
 
-A tiny, git-diff-friendly single-file wiki — empty file size is less than 50 KB.
+A tiny, git-diff-friendly single-file wiki — empty file size is about 45 KB.
 
 ## Why
 
@@ -37,6 +37,14 @@ A tiny, git-diff-friendly single-file wiki — empty file size is less than 50 K
 * Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
   * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
   * Reports Index note title/content as Wiki name/description
+
+## Moving notes from an old TiddlyWiki
+
+[tw2json.py](tw2json.py) (Python 3, no dependencies) extracts notes from a TiddlyWiki Classic or TiddlyWiki 5 HTML file into TiddlyWiki 5 JSON:
+
+```
+python3 tw2json.py old-wiki.html
+```
 
 ## Inspired by
 * Teddy Wiki Lite from https://github.com/crystal-world-project/crystal-world
