@@ -31,10 +31,10 @@ A tiny, git-diff-friendly single-file wiki - an empty wiki is about 48 KB.
 * Tags: filter the note list by tags (always sorted A-Z); the selected filter is saved in the file
 * Tags: tag-like words inside code and links are not counted as tags
 * Index note: the note with the fixed id `.index`; it opens at start and is recreated if missing
-* Internals: unlike TiddlyWiki 5 and FeatherWiki (which store content as a JSON string), DifflyWiki uses an XML vault
+* Internals: unlike TiddlyWiki 5 and FeatherWiki (which store content as a JSON string), DifflyWiki uses an XML vault inside XHTML file
+  * The wiki HTML file is also well-formed XML (XHTML-style), and saving keeps it that way
+  * Note content is wrapped in CDATA when saved, so file source stays readable (no escaped entities)
   * In some ways it resembles TiddlyWiki Classic, with improvements
-* Internals: the wiki HTML file is also well-formed XML (XHTML-style), and saving keeps it that way
-* Internals: note content is wrapped in CDATA when saved, so it stays readable (no escaped entities)
 * Internals: all UI strings are collected in one STRINGS table for easy localization
 * Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
   * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
