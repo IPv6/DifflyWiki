@@ -84,7 +84,7 @@ python3 tw2json.py old-wiki.html
 
 ## Inspired by
 * Teddy Wiki Lite from https://github.com/crystal-world-project/crystal-world
-* TiddlyWiki: https://github.com/TiddlyWiki/TiddlyWiki5
+* TiddlyWiki: https://github.com/TiddlyWiki/TiddlyWiki5 [discussion](https://talk.tiddlywiki.org/t/a-slim-wiki-inspired-by-tiddlywiki/15994/9)
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
