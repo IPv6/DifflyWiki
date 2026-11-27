@@ -42,8 +42,7 @@ A tiny, git-diff-friendly single-file wiki — empty file size is about 48 KB.
 
 ## Side benefits of XHTML
 
-The wiki file is also well-formed XML (XHTML), this makes the editing from the CLI possible.
-Popular XML tools can read and change notes directly without browser,
+The wiki file is also well-formed XML (XHTML), this makes the editing from the CLI possible. Popular XML tools can read and change notes directly without browser,
 for example your service can write periodical summaries straight into diffly-wiki.html file out-of-the-box
 
 ```
@@ -53,16 +52,26 @@ xmllint --xpath '//note/title/text()' diffly-wiki.html
 xmllint --xpath 'string(//note[title="Index"]/content)' diffly-wiki.html
 
 # xmlstarlet: can read and edit.
-# -L edits the file in place, -O skips the <?xml?> line
-xmlstarlet ed -L -O -d '//note[title="Old note"]' diffly-wiki.html
-xmlstarlet ed -L -O -u '//note[title="Index"]/title' -v 'Home' diffly-wiki.html
-xmlstarlet ed -L -O -s '//vault' -t elem -n note \
+# -L edits the file in place, -O skips the <?xml?> line, -P keeps the file's layout
+xmlstarlet sel -t -m '//note' -v 'title' -n diffly-wiki.html
+xmlstarlet ed -L -O -P -d '//note[title="Old note"]' diffly-wiki.html
+xmlstarlet ed -L -O -P -u '//note[title="Index"]/title' -v 'Home' diffly-wiki.html
+xmlstarlet ed -L -O -P -s '//vault' -t elem -n note \
   -s '//vault/note[last()]' -t elem -n title -v 'From CLI' \
   -s '//vault/note[last()]' -t elem -n content -v 'Some text #cli' diffly-wiki.html
+
+# yq (mikefarah/yq): can read, also as JSON or YAML. Don't write with it (see below)
+# [...] | flatten: yq gives a single note as an object, several as a list
+yq -p xml -oy '[.html.head.script.vault.note] | flatten | .[].title' diffly-wiki.html
+yq -p xml -oy '[.html.head.script.vault.note] | flatten | .[] | select(.title == "Index") | .content' diffly-wiki.html
+yq -p xml -oj '[.html.head.script.vault.note] | flatten | map({"id": .["+@id"], "title": .title})' diffly-wiki.html
 ```
 
 * A note needs only `<title>` and `<content>`: a missing `id` or `updated` is filled in when the wiki is opened, a missing title becomes "Untitled"
 * Order and layout don't matter: the next Save in the browser writes the file back in its usual sorted form
+* xmlstarlet: always pass `-P`. Without it the whole page is re-indented, and that stays in the file after browser saves
+* xmlstarlet: a `&` in a `-v` value must be written as `&amp;`
+* yq: read only. When writing XML it drops the CDATA around the page's script and style, so the page stops working
 * Don't reformat the file with `xmllint --format` or `xmlstarlet fo`
 
 
