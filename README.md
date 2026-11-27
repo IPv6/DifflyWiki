@@ -1,6 +1,6 @@
 # DifflyWiki
 
-A tiny, git-diff-friendly single-file wiki — empty file size is about 45 KB.
+A tiny, git-diff-friendly single-file wiki — empty file size is about 48 KB.
 
 ## Why
 
@@ -42,8 +42,9 @@ A tiny, git-diff-friendly single-file wiki — empty file size is about 45 KB.
 
 ## Side benefits of XHTML
 
-The wiki file is also well-formed XML (XHTML), this makes the editing from the command line possible.
-Popular XML tools can read and change notes directly without browser:
+The wiki file is also well-formed XML (XHTML), this makes the editing from the CLI possible.
+Popular XML tools can read and change notes directly without browser,
+for example your service can write periodical summaries straight into diffly-wiki.html file out-of-the-box
 
 ```
 # xmllint: can read. comes with macOS and most Linux distros
@@ -51,7 +52,7 @@ Popular XML tools can read and change notes directly without browser:
 xmllint --xpath '//note/title/text()' diffly-wiki.html
 xmllint --xpath 'string(//note[title="Index"]/content)' diffly-wiki.html
 
-# xmlstarlet: can read and edit
+# xmlstarlet: can read and edit.
 # -L edits the file in place, -O skips the <?xml?> line
 xmlstarlet ed -L -O -d '//note[title="Old note"]' diffly-wiki.html
 xmlstarlet ed -L -O -u '//note[title="Index"]/title' -v 'Home' diffly-wiki.html
