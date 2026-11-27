@@ -1,57 +1,57 @@
 # DifflyWiki
 
-A tiny, git-diff-friendly single-file wiki — empty file size is about 48 KB.
+A tiny, git-diff-friendly single-file wiki - an empty wiki is about 48 KB.
 
 ## Why
 
-* Git-diff friendly file format
-  * Saves notes at the beginning of the file; unmodified exports are byte-identical.
-  * Export preserves note formatting and keeps notes sorted alphabetically (A-Z by title)
-* Barebone functionality: Notes (with title+content+update date), Recents, Visits history, Search (title+content), Tags filter
-* Barebone Tags support. Tags are auto-discovered from note content
-* Barebone Import/Export in TiddlyWiki 5 JSON format
-* Very slim - basically, the HTML file is just your wiki content and a minimum of vanilla JS
+* Git-diff-friendly file format
+  * Notes are stored at the beginning of the file; saving without changes gives a byte-identical file
+  * Saving preserves note formatting and keeps notes sorted alphabetically (A-Z by title)
+* Bare-bones functionality: notes (title, content, update date), recent notes, visit history, search (title and content), tag filter
+* Bare-bones tag support: tags are auto-discovered from note content
+* Basic import/export in TiddlyWiki 5 JSON format
+* Very slim - the HTML file is basically just your wiki content plus a minimum of vanilla JS
 
 ## Tradeoffs
 * File export only
-* Basic markdown only
+* Basic Markdown only
 * Basic set of settings
-* Default theming only (TiddlyWiki5-like)
-* No plugins, no addons, hack the source if needed
+* Default theme only (TiddlyWiki 5-like)
+* No plugins or add-ons - hack the source if needed
 
-# What's next
+## Getting started
 
-* Download [empty Wiki](diffly-wiki.html) and open in any browser
+* Download the [empty wiki](diffly-wiki.html) and open it in any browser
 
 ## More details
 
-* Visits history for fast navigation (instead of TiddlyWiki-like story river)
-* New notes: Customizable title format
-* Markdown: Basic support for formatting, links, `fenced` blocks and inline html
-* Tags: Can be used to filter list of notes, always sorted A-Z, tags filter is persisted with file
-* Tags: Tag-like words in `fenced` blocks and links are not counted as tags
-* Index note: the one with hardcoded id ".index". Recreated at start if not found
-* Internals: Wiki html file is also a valid XHTML file (File export ensures this)
-* Internals: Unlike TiddlyWiki5 and FeatherWiki (which serialize content as a JSON string), DifflyWiki uses an XML vault
-  * In some ways, it is similar to TiddlyWiki Classic, though improved
-* Internals: Note contents are wrapped in CDATA on export (no escaped entities in the exported content)
-* Internals: Localizable STRINGS collected in one place for easy localization
+* Visit history for fast navigation (instead of a TiddlyWiki-style story river)
+* New notes: customizable title format
+* Markdown: basic support for formatting, links, fenced code blocks and inline HTML
+* Tags: filter the note list by tags (always sorted A-Z); the selected filter is saved in the file
+* Tags: tag-like words inside code and links are not counted as tags
+* Index note: the note with the fixed id `.index`; it opens at start and is recreated if missing
+* Internals: unlike TiddlyWiki 5 and FeatherWiki (which store content as a JSON string), DifflyWiki uses an XML vault
+  * In some ways it resembles TiddlyWiki Classic, with improvements
+* Internals: the wiki HTML file is also well-formed XML (XHTML-style), and saving keeps it that way
+* Internals: note content is wrapped in CDATA when saved, so it stays readable (no escaped entities)
+* Internals: all UI strings are collected in one STRINGS table for easy localization
 * Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
   * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
-  * Reports Index note title/content as Wiki name/description
+  * Reports the Index note's title and content as the wiki name and description
 
-## Side benefits of XHTML
+## Side benefits of XML
 
-The wiki file is also well-formed XML (XHTML), this makes the editing from the CLI possible. Popular XML tools can read and change notes directly without browser,
-for example your service can write periodical summaries straight into diffly-wiki.html file out-of-the-box
+The wiki file is also well-formed XML, which makes editing from the command line possible: popular XML tools can read and change notes directly, without a browser.
+For example, a script or service can write periodic summaries straight into diffly-wiki.html, out of the box.
 
 ```
-# xmllint: can read. comes with macOS and most Linux distros
+# xmllint: read only; comes with macOS and most Linux distros
 # list titles / print one note
 xmllint --xpath '//note/title/text()' diffly-wiki.html
 xmllint --xpath 'string(//note[title="Index"]/content)' diffly-wiki.html
 
-# xmlstarlet: can read and edit.
+# xmlstarlet: read and edit
 # -L edits the file in place, -O skips the <?xml?> line, -P keeps the file's layout
 xmlstarlet sel -t -m '//note' -v 'title' -n diffly-wiki.html
 xmlstarlet ed -L -O -P -d '//note[title="Old note"]' diffly-wiki.html
@@ -60,20 +60,19 @@ xmlstarlet ed -L -O -P -s '//vault' -t elem -n note \
   -s '//vault/note[last()]' -t elem -n title -v 'From CLI' \
   -s '//vault/note[last()]' -t elem -n content -v 'Some text #cli' diffly-wiki.html
 
-# yq (mikefarah/yq): can read, also as JSON or YAML. Don't write with it (see below)
-# [...] | flatten: yq gives a single note as an object, several as a list
+# yq (mikefarah/yq): read only, with JSON or YAML output; don't write with it (see below)
+# [...] | flatten: yq returns a single note as an object and several as a list
 yq -p xml -oy '[.html.head.script.vault.note] | flatten | .[].title' diffly-wiki.html
 yq -p xml -oy '[.html.head.script.vault.note] | flatten | .[] | select(.title == "Index") | .content' diffly-wiki.html
 yq -p xml -oj '[.html.head.script.vault.note] | flatten | map({"id": .["+@id"], "title": .title})' diffly-wiki.html
 ```
 
-* A note needs only `<title>` and `<content>`: a missing `id` or `updated` is filled in when the wiki is opened, a missing title becomes "Untitled"
+* A new note needs only `<title>` and `<content>`; a missing `id` or `updated` is filled in when the wiki is opened, and a missing title becomes "Untitled"
 * Order and layout don't matter: the next Save in the browser writes the file back in its usual sorted form
-* xmlstarlet: always pass `-P`. Without it the whole page is re-indented, and that stays in the file after browser saves
+* xmlstarlet: always pass `-P`. Without it the whole page is re-indented, and the indentation stays in the file after browser saves
 * xmlstarlet: a `&` in a `-v` value must be written as `&amp;`
-* yq: read only. When writing XML it drops the CDATA around the page's script and style, so the page stops working
+* yq: read-only. When writing XML, it drops the CDATA around the page's script and style, so the page stops working
 * Don't reformat the file with `xmllint --format` or `xmlstarlet fo`
-
 
 ## Moving notes from an old TiddlyWiki
 
