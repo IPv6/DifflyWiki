@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8">
 <script id="diffly-vault" type="application/xml">
-<vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below" newTitle="{YYYY}-{MM}-{DD} Untitled" dateFormat="">
+<vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below" newTitle="{YYYY}-{MM}-{DD} Untitled" dateFormat="" filterTags="">
 
 <note id="description" updated="2026-11-25T09:00:00Z">
 <title>Description</title>
@@ -291,6 +291,14 @@ Link your main notes here
 			? new XMLSerializer().serializeToString(node) : node.textContent).join('');
 	}
 
+	// #tag, #this-is-tag, #this_is_also_tag; a hyphen only between word chars,
+	// so "#tag-" or "#tag - text" stops before the dash
+	const TAG_RE = /#[\w가-힣]+(?:-[\w가-힣]+)*/g;
+	const ONE_TAG_RE = new RegExp(`^${TAG_RE.source}$`);
+	const isTagList = v => v === '' || v.split(' ').every(tag => ONE_TAG_RE.test(tag));
+	// Tag order everywhere: A-Z ignoring case, then exact text
+	const tagOrder = (a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b);
+
 	// Settings are attributes of <vault>, written in this key order. Each entry is
 	// [default, allowed values or a check]; anything missing or invalid falls back
 	// to the default. Values stay strings, exactly as stored in the file.
@@ -303,6 +311,7 @@ Link your main notes here
 		visitsPlace: ['below', ['below', 'above']],
 		newTitle: [STRINGS.newNoteTitle, isFormat], // empty: use the default above
 		dateFormat: ['', isFormat],                 // empty: browser's own format
+		filterTags: ['', isTagList],                // toggled tags, space-separated (not in the form)
 	};
 	function isFormat(v) { return v.length <= 200 && !/[\x00-\x1F]/.test(v); }
 
@@ -321,26 +330,36 @@ Link your main notes here
 			const v = root.getAttribute(key);
 			settings[key] = validSetting(key, v) ? v : SETTINGS[key][0];
 		}
-		const notes = Array.from(root.children)
-			.filter(e => e.localName === 'note')
-			.map(n => ({
-				id: n.getAttribute('id'),
-				updated: n.getAttribute('updated') || '',
-				title: childText(n, 'title'),
-				content: childMarkup(n, 'content').trim()
-			}));
+		// Notes written by hand or by XML tools may lack parts: a missing or repeated
+		// id gets a fresh one, missing "updated" is now, missing title the default,
+		// missing content empty. They are written out complete on the next save.
+		const notes = [];
+		for (const n of root.children) {
+			if (n.localName !== 'note') continue;
+			let id = n.getAttribute('id');
+			if (!id || notes.some(x => x.id === id)) id = newId(notes);
+			const hasTitle = Array.from(n.children).some(e => e.localName === 'title');
+			notes.push({
+				id,
+				updated: n.getAttribute('updated') || nowIso(),
+				title: hasTitle ? childText(n, 'title') : t('untitled'),
+				content: childMarkup(n, 'content').trim(),
+			});
+		}
 		return { notes, settings };
 	}
 
 	// Note content goes in CDATA, so HTML and markdown stay readable in the file.
 	// CDATA can't contain "]]>", and inside the vault <script> the HTML parser
 	// must never see "</script" or "<!--"; each is split across two CDATA sections.
+	// "</vault" is split too, so tools that cut the vault out by its lines
+	// (from "<vault " to "</vault>") never stop inside a note.
 	function cdata(s) {
 		s = String(s)
 			.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
 			.replace(/\r\n?/g, '\n')
 			.replace(/]]>/g, ']]]]><![CDATA[>')
-			.replace(/<(?=\/script|!--)/gi, '<]]><![CDATA[');
+			.replace(/<(?=\/script|!--|\/vault)/gi, '<]]><![CDATA[');
 		return '<![CDATA[\n' + s + '\n]]>';
 	}
 
@@ -512,13 +531,13 @@ Link your main notes here
 
 	// "updated" is stored as ISO 8601 UTC, e.g. 2026-11-25T21:40:00Z
 	// Unique note id, e.g. note_1764160000000_k3j9x
-	function newId() {
+	function newId(notes = db) {
 		let id;
 		do id = 'note_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-		while (db.some(n => n.id === id));
+		while (notes.some(n => n.id === id));
 		return id;
 	}
-	const nowIso = () => new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
+	function nowIso() { return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'); } // also used while loading
 	const timeOf = n => Date.parse(n.updated) || 0;
 	const byRecent = () => [...db].sort((a, b) => timeOf(b) - timeOf(a));
 
@@ -552,7 +571,13 @@ Link your main notes here
 	}
 
 	let currentId = ensureIndexNote().id;
-	let selectedTags = new Set();
+	// Toggled tag filters; saved in the file (settings.filterTags), so the same
+	// filtered list comes back after save and load
+	let selectedTags = new Set(settings.filterTags.split(' ').filter(Boolean));
+	const keepTagFilter = () => { settings.filterTags = [...selectedTags].sort(tagOrder).join(' '); };
+	// Tags shown in the tag block: every tag found in notes, plus toggled ones even if
+	// no note has them any more (they leave once untoggled)
+	const allTags = () => new Set([...db.flatMap(n => tagsOf(n.content)), ...selectedTags]);
 	let isEditing = false;
 	// Recently opened notes, newest first. Stored as ids, so renames show up and
 	// deleted notes can be dropped. Kept for this session only, not saved in the file.
@@ -566,9 +591,6 @@ Link your main notes here
 	const subEl = document.getElementById('note-sub');
 	const exportBtn = document.getElementById('export-btn');
 
-	// #tag, #this-is-tag, #this_is_also_tag; a hyphen only between word chars,
-	// so "#tag-" or "#tag - text" stops before the dash
-	const TAG_RE = /#[\w가-힣]+(?:-[\w가-힣]+)*/g;
 	const CODE_BLOCK_RE = /^```[^\n]*\n([\s\S]*?)^```[ \t]*$/gm; // ```lang ... ``` on their own lines
 	const INLINE_CODE_RE = /`([^`\n]+)`/g;
 	const escHtml = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -621,11 +643,13 @@ Link your main notes here
 		} else {
 			selectedTags.add(tag);
 		}
+		keepTagFilter();
 		renderList();
 	}
 
 	function resetTags() {
 		selectedTags.clear();
+		keepTagFilter();
 		renderList();
 	}
 
@@ -633,13 +657,10 @@ Link your main notes here
 		const search = document.getElementById('search').value.toLowerCase();
 		listEl.innerHTML = "";
 		
-		const allTags = new Set();
-		db.forEach(n => tagsOf(n.content).forEach(t => allTags.add(t)));
-		// A selected tag that no note has any more can't be seen or unselected: drop it
-		selectedTags.forEach(tag => { if (!allTags.has(tag)) selectedTags.delete(tag); });
+		const tags = allTags();
 
 		tagCloudEl.innerHTML = "";
-		[...allTags].sort((a, b) => cmp(a.toLowerCase(), b.toLowerCase()) || cmp(a, b)).forEach(tag => {
+		[...tags].sort(tagOrder).forEach(tag => {
 			const btn = document.createElement('span');
 			const isActive = selectedTags.has(tag);
 			btn.className = `tag-btn ${isActive ? 'active' : ''}`;
@@ -647,7 +668,7 @@ Link your main notes here
 			btn.onclick = () => toggleTagFilter(tag);
 			tagCloudEl.appendChild(btn);
 		});
-		if (allTags.size) {
+		if (tags.size) {
 			const x = document.createElement('span');
 			x.className = 'tag-reset';
 			x.textContent = '×';
@@ -699,6 +720,7 @@ Link your main notes here
 	function fillSettingsForm() {
 		const f = settingsForm().elements;
 		for (const key in SETTINGS) {
+			if (!f[key]) continue;
 			if (f[key].type === 'checkbox') f[key].checked = settings[key] === 'true';
 			else f[key].value = settings[key];
 		}
@@ -707,6 +729,7 @@ Link your main notes here
 	function readSettingsForm() {
 		const f = settingsForm().elements;
 		for (const key in SETTINGS) {
+			if (!f[key]) continue;
 			const v = f[key].type === 'checkbox' ? String(f[key].checked) : f[key].value.trim();
 			if (validSetting(key, v)) settings[key] = v;
 		}
@@ -720,7 +743,7 @@ Link your main notes here
 		search.hidden = settings.showSearch !== 'true';
 		if (search.hidden) search.value = '';          // no invisible filtering
 		tagCloudEl.hidden = settings.showTags !== 'true';
-		if (tagCloudEl.hidden) selectedTags.clear();
+		if (tagCloudEl.hidden) { selectedTags.clear(); keepTagFilter(); } // no invisible filtering
 		const card = document.querySelector('.note');
 		const visitsEl = document.getElementById('visits');
 		card.parentNode.insertBefore(visitsEl, settings.visitsPlace === 'above' ? card : card.nextSibling);
@@ -750,7 +773,7 @@ Link your main notes here
 		const shown = visits.filter(id => id !== currentId).map(id => db.find(n => n.id === id)).filter(Boolean);
 		if (!shown.length) {
 			const lastEdited = db.reduce((last, n) => (n.updated > last ? n.updated : last), '');
-			const text = t('stats', { notes: db.length, tags: new Set(db.flatMap(n => tagsOf(n.content))).size, date: formatUpdated(lastEdited) });
+			const text = t('stats', { notes: db.length, tags: allTags().size, date: formatUpdated(lastEdited) });
 			text.split(' · ').forEach((part, i) => {
 				if (i) el.appendChild(visitSep());
 				const span = document.createElement('span');
