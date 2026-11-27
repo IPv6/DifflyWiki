@@ -84,7 +84,7 @@ Link your main notes here
 	.visits.above { height: 40px; line-height: 40px; margin: -4px 0 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 	.visits .visit { color: var(--link); cursor: pointer; }
 	.visits .visit:hover { text-decoration: underline; }
-	.visits .visit.current { color: var(--muted); cursor: default; text-decoration: none; }
+	.visits .stats { color: var(--faint); }
 	.visits .sep { margin: 0 7px; color: var(--faint); }
 	.footer { flex: none; color: var(--faint); font-size: 0.8em; margin-top: 14px; }
 	#sidebar { width: calc(var(--side-col) + 42px); flex-shrink: 0; position: sticky; top: 0; max-height: 100vh; display: flex; flex-direction: column; padding: 36px 28px 24px 14px; color: #666; }
@@ -216,6 +216,7 @@ Link your main notes here
 		confirmDelete: 'Delete note "{title}"?',
 		cannotDeleteLast: 'Cannot delete the last note.',
 		untitled: 'Untitled',
+		stats: 'Stats · Notes: {notes} · Tags: {tags} · Last edited: {date}', // in place of visits when there are none; " · " splits parts
 		newNoteTitle: '{YYYY}-{MM}-{DD} Untitled', // default for the "New note title" setting
 		newNoteContent: 'Start writing...\n{date} #draft', // {date}: now, shown like the date under a title
 		linkNoteContent: 'Start writing...\n{date} #draft\nCreated via WikiLink {title}',
@@ -736,22 +737,37 @@ Link your main notes here
 		const chars = Array.from(text);
 		return chars.length > max ? chars.slice(0, max).join('') + '...' : text;
 	}
+	function visitSep() {
+		const sep = document.createElement('span');
+		sep.className = 'sep';
+		sep.textContent = '·';
+		return sep;
+	}
+
 	function renderVisits() {
 		const el = document.getElementById('visits');
 		el.textContent = '';
-		visits.map(id => db.find(n => n.id === id)).filter(Boolean).forEach((note, i) => {
-			if (i) {
-				const sep = document.createElement('span');
-				sep.className = 'sep';
-				sep.textContent = '·';
-				el.appendChild(sep);
-			}
+		const shown = visits.filter(id => id !== currentId).map(id => db.find(n => n.id === id)).filter(Boolean);
+		if (!shown.length) {
+			const lastEdited = db.reduce((last, n) => (n.updated > last ? n.updated : last), '');
+			const text = t('stats', { notes: db.length, tags: new Set(db.flatMap(n => tagsOf(n.content))).size, date: formatUpdated(lastEdited) });
+			text.split(' · ').forEach((part, i) => {
+				if (i) el.appendChild(visitSep());
+				const span = document.createElement('span');
+				span.className = 'stats';
+				span.textContent = part;
+				el.appendChild(span);
+			});
+			return;
+		}
+		shown.forEach((note, i) => {
+			if (i) el.appendChild(visitSep());
 			const title = note.title || t('untitled');
 			const a = document.createElement('span');
-			a.className = 'visit' + (note.id === currentId ? ' current' : '');
+			a.className = 'visit';
 			a.textContent = clip(title, VISIT_TITLE_MAX);
 			if (a.textContent !== title) a.title = title;
-			if (note.id !== currentId) a.onclick = () => loadNote(note.id);
+			a.onclick = () => loadNote(note.id);
 			el.appendChild(a);
 		});
 	}
