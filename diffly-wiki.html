@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8">
+<html lang="en"><head><meta charset="UTF-8" />
 <script id="diffly-vault" type="application/xml">
 <vault version="1" sort="date" order="desc" showTags="true" showSearch="true" visitsCap="20" visitsPlace="below" newTitle="{YYYY}-{MM}-{DD} Untitled" dateFormat="" filterTags="">
 
@@ -43,9 +43,9 @@ Link your main notes here
 </script>
 
 <title>DifflyWiki</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="application-name" content="DifflyWiki">
-<style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="application-name" content="DifflyWiki" />
+<style>/*<![CDATA[*/
 	:root { --page: #f4f4f4; --card: #ffffff; --text: #333333; --title: #182955; --muted: #999999; --faint: #bbbbbb; --link: #5778d8; --rule: #cccccc; --tab: #e4e4e4; --focus: #5778d8; --side-col: 300px; }
 	* { box-sizing: border-box; margin: 0; padding: 0; }
 	body { display: flex; align-items: flex-start; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 15px; line-height: 1.5; background: var(--page); color: var(--text); }
@@ -134,7 +134,7 @@ Link your main notes here
 		#sidebar { width: auto; position: static; max-height: none; padding: 8px 16px 32px; align-items: center; }
 		#note-list { max-height: none; }
 	}
-</style>
+/*]]>*/</style>
 </head>
 
 <body>
@@ -142,18 +142,18 @@ Link your main notes here
 <main id="main">
 	<div class="note">
 		<div class="note-head">
-			<input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()" onkeydown="titleKeyDown(event)">
+			<input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()" onkeydown="titleKeyDown(event)" />
 			<div class="note-controls">
 				<button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
 				<button id="delete-btn" class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
 				<button id="close-btn" class="icon-btn" title="Close" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 			</div>
 		</div>
-		<div class="note-sub" id="note-sub"></div>
-		<textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"></textarea>
-		<div id="viewer"></div>
+		<div class="note-sub" id="note-sub"> </div>
+		<textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"> </textarea>
+		<div id="viewer"> </div>
 	</div>
-	<div class="visits" id="visits"></div>
+	<div class="visits" id="visits"> </div>
 </main>
 <aside id="sidebar">
 	<div class="page-controls">
@@ -164,8 +164,8 @@ Link your main notes here
 		<button id="export-btn" class="btn export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
 	</div>
 	<form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
-		<label class="check"><input type="checkbox" name="showTags"><span data-l10n="showTags">Show tags filter</span></label>
-		<label class="check"><input type="checkbox" name="showSearch"><span data-l10n="showSearch">Show search</span></label>
+		<label class="check"><input type="checkbox" name="showTags" /><span data-l10n="showTags">Show tags filter</span></label>
+		<label class="check"><input type="checkbox" name="showSearch" /><span data-l10n="showSearch">Show search</span></label>
 		<label><span data-l10n="sortBy">Sort notes by</span>
 			<select name="sort"><option value="date" data-l10n="sortDate">Date</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
 		<label><span data-l10n="sortOrder">Order</span>
@@ -173,25 +173,25 @@ Link your main notes here
 		<label><span data-l10n="visitsPlace">Recent visits</span>
 			<select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
 		<label><span data-l10n="visitsCap">Recent visits to keep</span>
-			<input type="number" name="visitsCap" min="1" max="100"></label>
+			<input type="number" name="visitsCap" min="1" max="100" /></label>
 		<label class="wide"><span data-l10n="newTitleFormat">New note title</span>
-			<input type="text" name="newTitle"></label>
+			<input type="text" name="newTitle" /></label>
 		<label class="wide"><span data-l10n="dateFormat">Date format</span>
-			<input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint"></label>
+			<input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint" /></label>
 		<div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
 		<div class="io">
 			<button type="button" class="btn" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
 			<button type="button" class="btn" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
 		</div>
 	</form>
-	<input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)">
-	<input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()">
-	<div class="tag-cloud" id="tag-cloud"></div>
-	<ul id="note-list"></ul>
+	<input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)" />
+	<input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()" />
+	<div class="tag-cloud" id="tag-cloud"> </div>
+	<ul id="note-list"> </ul>
 	<div class="footer" data-l10n="footer">© 2026 DifflyWiki. MIT License</div>
 </aside>
 
-<script>
+<script>//<![CDATA[
 	// === UI STRINGS: translate here ===
 	// Every interface string lives in this one object. "{name}" marks a value
 	// filled in at runtime; keep it, but move it anywhere in the sentence.
@@ -350,7 +350,7 @@ Link your main notes here
 	}
 
 	// Note content goes in CDATA, so HTML and markdown stay readable in the file.
-	// CDATA can't contain "]]>", and inside the vault <script> the HTML parser
+	// CDATA can't contain its end marker "]]" + ">", and inside the vault <script> the HTML parser
 	// must never see "</script" or "<!--"; each is split across two CDATA sections.
 	// "</vault" is split too, so tools that cut the vault out by its lines
 	// (from "<vault " to "</vault>") never stop inside a note.
@@ -358,9 +358,9 @@ Link your main notes here
 		s = String(s)
 			.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
 			.replace(/\r\n?/g, '\n')
-			.replace(/]]>/g, ']]]]><![CDATA[>')
-			.replace(/<(?=\/script|!--|\/vault)/gi, '<]]><![CDATA[');
-		return '<![CDATA[\n' + s + '\n]]>';
+			.replace(/]]\x3E/g, ']]]]\x3E<![CDATA[\x3E')
+			.replace(/<(?=\/script|!--|\/vault)/gi, '<]]\x3E<![CDATA[');
+		return '<![CDATA[\n' + s + '\n]]\x3E'; // "\x3E" is ">": this script is itself in CDATA
 	}
 
 	function xmlEscape(s, attr) {
@@ -413,7 +413,19 @@ Link your main notes here
 	function buildExportHtml() {
 		const root = pristineRoot.cloneNode(true);
 		root.querySelector('#' + VAULT_ID).textContent = serializeVault(db, settings);
-		return '<!DOCTYPE html>\n' + root.outerHTML;
+		// The file ends with a newline after </html>, as XML tools write it. The HTML parser
+		// moves that newline into <body>, so the body's end is reset to one fixed form.
+		return '<!DOCTYPE html>\n' + xmlVoidTags(root.outerHTML).replace(/\s*<\/body><\/html>$/, '\n\n</body></html>\n');
+	}
+
+	// The file is also well-formed XML, so XML tools (xmllint, xmlstarlet...) can read
+	// and edit it. outerHTML writes empty tags as <meta ...>; XML needs <meta ... />.
+	// Script and style text is left as is (it is wrapped in CDATA in the file).
+	function xmlVoidTags(html) {
+		return html.split(/(<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>)/)
+			.map((part, i) => (i % 2 ? part
+				: part.replace(/<(area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)\b([^>]*?)\s*\/?>/g, '<$1$2 />')))
+			.join('');
 	}
 
 	function download(blob, filename) {
@@ -972,6 +984,6 @@ Link your main notes here
 		applySettings();
 		loadNote(currentId);
 	});
-</script>
+//]]></script>
 
 </body></html>

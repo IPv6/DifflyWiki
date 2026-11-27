@@ -46,6 +46,27 @@ A tiny, git-diff-friendly single-file wiki — empty file size is about 45 KB.
 python3 tw2json.py old-wiki.html
 ```
 
+## Editing from the command line
+
+The wiki file is also well-formed XML, so XML tools can read and change notes directly:
+
+```
+# list titles / print one note (xmllint comes with macOS and most Linux distros)
+xmllint --xpath '//note/title/text()' diffly-wiki.html
+xmllint --xpath 'string(//note[title="Index"]/content)' diffly-wiki.html
+
+# delete, rename, add (xmlstarlet: -L edits the file in place, -O skips the <?xml?> line)
+xmlstarlet ed -L -O -d '//note[title="Old note"]' diffly-wiki.html
+xmlstarlet ed -L -O -u '//note[title="Index"]/title' -v 'Home' diffly-wiki.html
+xmlstarlet ed -L -O -s '//vault' -t elem -n note \
+  -s '//vault/note[last()]' -t elem -n title -v 'From CLI' \
+  -s '//vault/note[last()]' -t elem -n content -v 'Some text #cli' diffly-wiki.html
+```
+
+* A note needs only `<title>` and `<content>`: a missing `id` or `updated` is filled in when the wiki is opened, a missing title becomes "Untitled"
+* Order and layout don't matter: the next Save in the browser writes the file back in its usual sorted form
+* Don't reformat the file with `xmllint --format` or `xmlstarlet fo`
+
 ## Inspired by
 * Teddy Wiki Lite from https://github.com/crystal-world-project/crystal-world
 * TiddlyWiki: https://github.com/TiddlyWiki/TiddlyWiki5
