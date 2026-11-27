@@ -21,7 +21,7 @@ A tiny, git-diff-friendly single-file wiki - an empty wiki is about 48 KB.
 
 ## Getting started
 
-* Download the [empty wiki](diffly-wiki.html) and open it in any browser
+* Download the [empty wiki](diffly-wiki.html) and open it in any browser, or work with it from the command line using XML tools like xmlstarlet
 
 ## More details
 
