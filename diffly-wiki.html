@@ -60,7 +60,8 @@ Link your main notes here
 	.title-input:not([readonly]):focus { border-color: var(--focus); }
 	.note-controls { display: flex; gap: 6px; padding-top: 6px; }
 	.icon-btn { background: none; border: none; cursor: pointer; padding: 4px; line-height: 0; color: var(--faint); border-radius: 3px; }
-	.icon-btn:hover { color: #666; }
+	@media (hover: hover) { .icon-btn:hover { color: #666; } }
+	#edit-btn.editing { color: var(--text); }
 	.icon-btn svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 	#edit-btn .ic-done { display: none; }
 	#edit-btn.editing .ic-edit { display: none; }
@@ -216,8 +217,8 @@ Link your main notes here
 		cannotDeleteLast: 'Cannot delete the last note.',
 		untitled: 'Untitled',
 		newNoteTitle: '{YYYY}-{MM}-{DD} Untitled', // default for the "New note title" setting
-		newNoteContent: '# New Note\n\nStart writing... #draft',
-		linkNoteContent: '# {title}\n\nCreated via WikiLink.',
+		newNoteContent: 'Start writing...\n{date} #draft', // {date}: now, shown like the date under a title
+		linkNoteContent: 'Start writing...\n{date} #draft\nCreated via WikiLink {title}',
 		indexTitle: 'Index',
 		indexContent: '# Start page of this wiki\nLink your main notes here',
 		settings: 'Settings',
@@ -805,8 +806,7 @@ Link your main notes here
 	}
 
 	function createNewNote(content) {
-		const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()),
-											content: typeof content === 'string' ? content : t('newNoteContent') };
+		const newNote = { id: newId(), updated: nowIso(), title: formatDate(settings.newTitle || t('newNoteTitle'), new Date()), content: typeof content === 'string' ? content : t('newNoteContent', { date: formatUpdated(nowIso()) }) };
 		db.unshift(newNote);
 		loadNote(newNote.id);
 		if (!isEditing) toggleEdit();
@@ -838,7 +838,7 @@ Link your main notes here
 	function navigateTo(title) {
 		let target = db.find(n => n.title.toLowerCase() === title.toLowerCase());
 		if (!target) {
-			target = { id: newId(), updated: nowIso(), title: title, content: t('linkNoteContent', { title }) };
+			target = { id: newId(), updated: nowIso(), title: title, content: t('linkNoteContent', { title, date: formatUpdated(nowIso()) }) };
 			db.unshift(target);
 		}
 		loadNote(target.id);
