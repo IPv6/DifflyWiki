@@ -42,9 +42,9 @@ Link your main notes here
 </vault>
 </script>
 
-<title>DifflyWiki</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DifflyWiki~v1.03</title>
 <meta name="application-name" content="DifflyWiki" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <style>/*<![CDATA[*/
 	:root { --page: #f4f4f4; --card: #ffffff; --text: #333333; --title: #182955; --muted: #999999; --faint: #bbbbbb; --link: #5778d8; --rule: #cccccc; --tab: #e4e4e4; --focus: #5778d8; --side-col: 300px; }
 	* { box-sizing: border-box; margin: 0; padding: 0; }
@@ -351,10 +351,9 @@ Link your main notes here
 	}
 
 	// Note content goes in CDATA, so HTML and markdown stay readable in the file.
-	// CDATA can't contain its end marker "]]" + ">", and inside the vault <script> the HTML parser
-	// must never see "</script" or "<!--"; each is split across two CDATA sections.
-	// "</vault" is split too, so tools that cut the vault out by its lines
-	// (from "<vault " to "</vault>") never stop inside a note.
+	// CDATA can't contain its end marker "]]"+">", and inside the vault <script> the HTML parser
+	// must never see "</"+"script" or "<!"+"--"; each is split across two CDATA sections.
+	// "</vault" is split too, so tools that cut the vault out by its lines (from "<vault " to "</vault>") never stop inside a note.
 	function cdata(s) {
 		s = String(s)
 			.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '') // not representable in XML 1.0
@@ -372,7 +371,7 @@ Link your main notes here
 		return attr ? s.replace(/"/g, '&quot;').replace(/\n/g, '&#10;').replace(/\t/g, '&#9;') : s;
 	}
 
-// === EXPORT/IMPORT ===
+	// === EXPORT/IMPORT ===
 	// Stable file order: title A→Z (case-insensitive), then newest "updated" first,
 	// then id. Plain code-point comparison, not localeCompare, so every browser
 	// and system locale writes the same order.
@@ -423,10 +422,7 @@ Link your main notes here
 	// and edit it. outerHTML writes empty tags as <meta ...>; XML needs <meta ... />.
 	// Script and style text is left as is (it is wrapped in CDATA in the file).
 	function xmlVoidTags(html) {
-		return html.split(/(<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>)/)
-			.map((part, i) => (i % 2 ? part
-				: part.replace(/<(area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)\b([^>]*?)\s*\/?>/g, '<$1$2 />')))
-			.join('');
+		return html.split(/(<script\b[\s\S]*?<\/script>|<style\b[\s\S]*?<\/style>)/).map((part, i) => (i % 2 ? part : part.replace(/<(area|base|br|col|embed|hr|img|input|link|meta|source|track|wbr)\b([^>]*?)\s*\/?>/g, '<$1$2 />'))).join('');
 	}
 
 	function download(blob, filename) {
@@ -460,9 +456,9 @@ Link your main notes here
 		}
 	}
 
-	// "Saved successfully" toast for 3 s. Each save restarts the timer, so repeated
-	// saves can't leave it stuck: it hides 3 s after the last one.
-	const SAVED_TOAST_MS = 3000;
+	// "Saved successfully" toast for 5 s. Each save restarts the timer, so repeated
+	// saves can't leave it stuck: it hides 5 s after the last one.
+	const SAVED_TOAST_MS = 5000;
 	let savedToastTimer = null;
 	function showSavedToast() {
 		const toast = document.getElementById('save-toast');
@@ -634,8 +630,7 @@ Link your main notes here
 			.replace(/\*([^*\s](?:[^*\n]*[^*\s])?)\*/g, '<i>$1</i>') // *x* but not "a * b * c"
 			.replace(/^---$/gm, '<hr>')
 			// Finished links are set aside too, so a #anchor in the address isn't taken for a tag
-			.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, (m, label, url) =>
-				keep(`<a href="${url.replace(/"/g, '%22')}" target="_blank" class="ext-link">${label}</a>`))
+			.replace(/\[([^\]]+)\]\((https?:\/\/[^\s]+)\)/g, (m, label, url) => keep(`<a href="${url.replace(/"/g, '%22')}" target="_blank" class="ext-link">${label}</a>`))
 			.replace(TAG_RE, '<span class="wiki-tag">$&</span>')
 			.replace(/\[\[(.*?)\]\]/g, (m, target) => `<span class="wiki-link" onclick="navigateTo('${target}')">${target}</span>`)
 			.replace(/\n/g, '<br>')
