@@ -244,6 +244,7 @@ Link your main notes here
 		importDone: 'Imported: {added} new, {replaced} replaced, {skipped} skipped',
 		importFailed: 'Import failed: {error}',
 		saved: 'Saved successfully',
+		saveFailed: 'Could not save: {error}',
 	};
 
 	// t('confirmDelete', { title: 'X' }) -> 'Delete note "X"?'
@@ -438,17 +439,25 @@ Link your main notes here
 	}
 
 	// The TW5 compatibility shim (end of script) may take over saving: $tw.diffly.save*()
-	// return true when they handled it (inside Tiddloid). Otherwise: a normal download.
+	// return true when they handled it (Tiddloid, TiddlyStow). Otherwise: a normal download.
 	function downloadText(text, filename, type) {
 		if (!window.$tw?.diffly?.saveDownload(text, filename)) download(new Blob([text], { type }), filename);
 	}
 
 	function downloadSelf() {
 		const html = buildExportHtml();
-		if (!window.$tw?.diffly?.saveWiki(html)) download(new Blob([html], { type: 'text/html' }), exportFilename());
-		savedSignature = changeSignature();
-		updateExportState();
-		showSavedToast();
+		const signature = changeSignature(); // what this save contains; edits made while it runs stay unsaved
+		// Some savers report back later (TiddlyStow writes the file asynchronously)
+		const done = err => {
+			if (err) return alert(t('saveFailed', { error: err.message || err }));
+			savedSignature = signature;
+			updateExportState();
+			showSavedToast();
+		};
+		if (!window.$tw?.diffly?.saveWiki(html, done)) {
+			download(new Blob([html], { type: 'text/html' }), exportFilename());
+			done();
+		}
 	}
 
 	// "Saved successfully" toast for 3 s. Each save restarts the timer, so repeated
@@ -895,13 +904,16 @@ Link your main notes here
 		loadNote(target.id);
 	}
 
-	// === TW5 COMPATIBILITY (Tiddloid) ===
+	// === TW5 COMPATIBILITY (Tiddloid, TiddlyStow) ===
 	// Tiddloid (Android app for TiddlyWiki files) accepts a page that defines
 	// version.title (and no version.major, which would mean TiddlyWiki Classic), then
 	// drives it through TiddlyWiki 5 globals. This minimal $tw answers exactly the calls
 	// it makes: info for the toolbar, isDirty/saveWiki, new note from shared text,
 	// file import, links.
-	if (!window.$tw) {
+	// TiddlyStow (web page that opens a local wiki file) sets $tw.customSaver first and
+	// then writes the wiki into its own window, so $tw may already exist: it is extended,
+	// not replaced.
+	{
 		window.version = { title: t('appTitle') };
 		// Palette lookup: page-background colours Tiddloid's toolbar like the page
 		const TW_TEXT = {
@@ -931,7 +943,13 @@ Link your main notes here
 			else if (e.type === 'tm-import-tiddlers') importTiddlers(JSON.parse(e.param), { quiet: true });
 		};
 		const BINARY_TYPE = /^(image\/(?!svg)|audio\/|video\/|application\/(pdf|octet-stream|zip))/;
-		window.$tw = {
+		// TiddlyWiki's "custom saver" hook (TiddlyStow and similar hosts):
+		// $tw.customSaver.save(text, method, callback) on this window or its parent frame
+		const findCustomSaver = w => {
+			try { return typeof w?.$tw?.customSaver?.save === 'function' ? w.$tw.customSaver : null; }
+			catch (e) { return null; } // parent frame from another origin
+		};
+		window.$tw = Object.assign(window.$tw || {}, {
 			rootWidget: {},
 			wiki: {
 				getTiddlerText: title => (TW_TEXT[title] ? TW_TEXT[title]() : null),
@@ -958,11 +976,18 @@ Link your main notes here
 			saverHandler: { isDirty: () => hasUnsavedChanges(), saveWiki: () => downloadSelf() },
 			// Page -> app: Tiddloid injects a "twi" bridge that saves the opened file in place
 			// and shows a "save as" dialog for other files (it can't handle blob downloads).
-			// Used by downloadSelf()/downloadText(); true = handled here.
+			// TiddlyStow writes the file through its custom saver and reports via callback.
+			// Used by downloadSelf()/downloadText(); true = handled here, done(err) when finished.
 			diffly: {
-				saveWiki(html) {
-					if (typeof window.twi?.saveWiki !== 'function') return false;
-					window.twi.saveWiki(html);
+				saveWiki(html, done) {
+					if (typeof window.twi?.saveWiki === 'function') {
+						window.twi.saveWiki(html);
+						done();
+						return true;
+					}
+					const saver = findCustomSaver(window) || findCustomSaver(window.parent);
+					if (!saver) return false;
+					saver.save(html, 'save', err => done(err));
 					return true;
 				},
 				saveDownload(text, filename) {
@@ -972,7 +997,7 @@ Link your main notes here
 				},
 			},
 			Story: class { navigateTiddler(title) { navigateTo(String(title)); } },
-		};
+		});
 	}
 
 	// Wait for the parser to finish so the snapshot includes everything after

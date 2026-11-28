@@ -1,6 +1,6 @@
 # DifflyWiki
 
-A tiny, git-diff-friendly single-file wiki - an empty wiki is about 48 KB.
+A tiny, git-diff-friendly single-file wiki - an empty wiki is about 50 KB.
 
 ## Why
 
@@ -36,6 +36,9 @@ A tiny, git-diff-friendly single-file wiki - an empty wiki is about 48 KB.
   * Note content is wrapped in CDATA when saved, so file source stays readable (no escaped entities)
   * In some ways it resembles TiddlyWiki Classic, with improvements
 * Internals: all UI strings are collected in one STRINGS table for easy localization
+* Works with [TiddlyStow](https://btheado.github.io/tiddlystow/) v1
+  * Open the wiki file there; Save writes straight back into that file
+  * Require browser with the File System Access API, e.g. Chrome, Edge
 * Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
   * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
   * Reports the Index note's title and content as the wiki name and description
