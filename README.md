@@ -36,9 +36,10 @@ A tiny, git-diff-friendly single-file wiki - an empty wiki is about 50 KB.
   * Note content is wrapped in CDATA when saved, so file source stays readable (no escaped entities)
   * In some ways it resembles TiddlyWiki Classic, with improvements
 * Internals: all UI strings are collected in one STRINGS table for easy localization
-* Works with [TiddlyStow](https://btheado.github.io/tiddlystow/) v1
+* Works with [TiddlyStow v1](https://btheado.github.io/tiddlystow/) and [TiddlyStow v2](https://btheado.github.io/tiddlystow/v2)
   * Tested with v1: in-place save (open the wiki file there; Save writes straight back into that file)
-  * Requires a browser with the File System Access API, e.g. Chrome, Edge
+  * v1 requires a browser with the File System Access API, e.g. Chrome, Edge
+  * v2 (and WebDAV servers): Save sends an HTTP PUT to the wiki's own URL, like TiddlyWiki's PUT saver
 * Works in [Tiddloid](https://github.com/donmor/Tiddloid) (Android)
   * Tested with v2.5.4: in-place save, exit warning, share-to-wiki
   * Reports the Index note's title and content as the wiki name and description
