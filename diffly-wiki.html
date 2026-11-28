@@ -910,9 +910,9 @@ Link your main notes here
 	// drives it through TiddlyWiki 5 globals. This minimal $tw answers exactly the calls
 	// it makes: info for the toolbar, isDirty/saveWiki, new note from shared text,
 	// file import, links.
-	// TiddlyStow (web page that opens a local wiki file) sets $tw.customSaver first and
+	// TiddlyStow v1 (web page that opens a local wiki file) sets $tw.customSaver first and
 	// then writes the wiki into its own window, so $tw may already exist: it is extended,
-	// not replaced.
+	// not replaced. TiddlyStow v2 serves the file from a URL and saves it on HTTP PUT.
 	{
 		window.version = { title: t('appTitle') };
 		// Palette lookup: page-background colours Tiddloid's toolbar like the page
@@ -949,6 +949,15 @@ Link your main notes here
 			try { return typeof w?.$tw?.customSaver?.save === 'function' ? w.$tw.customSaver : null; }
 			catch (e) { return null; } // parent frame from another origin
 		};
+		// TiddlyWiki's PUT saver (TiddlyStow v2, WebDAV servers): if the page's own URL
+		// answers OPTIONS with a "dav" header, saving is a PUT of the page to that URL
+		let putUrl = null;
+		if (/^https?:$/.test(location.protocol)) {
+			const url = location.href.split('#')[0];
+			fetch(url, { method: 'OPTIONS' })
+				.then(r => { if (r.ok && r.headers.has('dav')) putUrl = url; })
+				.catch(() => {}); // no such server: Save keeps downloading
+		}
 		window.$tw = Object.assign(window.$tw || {}, {
 			rootWidget: {},
 			wiki: {
@@ -976,7 +985,8 @@ Link your main notes here
 			saverHandler: { isDirty: () => hasUnsavedChanges(), saveWiki: () => downloadSelf() },
 			// Page -> app: Tiddloid injects a "twi" bridge that saves the opened file in place
 			// and shows a "save as" dialog for other files (it can't handle blob downloads).
-			// TiddlyStow writes the file through its custom saver and reports via callback.
+			// TiddlyStow v1 writes the file through its custom saver and reports via callback;
+			// TiddlyStow v2 (or a WebDAV server) gets an HTTP PUT.
 			// Used by downloadSelf()/downloadText(); true = handled here, done(err) when finished.
 			diffly: {
 				saveWiki(html, done) {
@@ -986,8 +996,13 @@ Link your main notes here
 						return true;
 					}
 					const saver = findCustomSaver(window) || findCustomSaver(window.parent);
-					if (!saver) return false;
-					saver.save(html, 'save', err => done(err));
+					if (saver) {
+						saver.save(html, 'save', err => done(err));
+						return true;
+					}
+					if (!putUrl) return false;
+					fetch(putUrl, { method: 'PUT', headers: { 'Content-Type': 'text/html;charset=UTF-8' }, body: html })
+						.then(r => done(r.ok ? null : new Error(`${r.status} ${r.statusText}`)), done);
 					return true;
 				},
 				saveDownload(text, filename) {
