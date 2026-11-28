@@ -87,6 +87,7 @@ Link your main notes here
 	.visits .stats { color: var(--faint); }
 	.visits .sep { margin: 0 7px; color: var(--faint); }
 	.footer { flex: none; color: var(--faint); font-size: 0.8em; margin-top: 14px; }
+	.footer a { color: inherit; }
 	#sidebar { width: calc(var(--side-col) + 42px); flex-shrink: 0; position: sticky; top: 0; max-height: 100vh; display: flex; flex-direction: column; padding: 36px 28px 24px 14px; color: #666; }
 	#sidebar > * { width: 100%; max-width: var(--side-col); }
 	#sidebar > .page-controls { width: calc(100% + 4px); max-width: calc(var(--side-col) + 4px); }
@@ -138,57 +139,57 @@ Link your main notes here
 </head>
 
 <body>
-<div class="save-toast" id="save-toast" data-l10n="saved" hidden="" onclick="hideSavedToast()">Saved successfully</div>
+<div class="save-toast" id="save-toast" data-l10n="saved" hidden="" onclick="hideSavedToast()">·</div>
 <main id="main">
 	<div class="note">
 		<div class="note-head">
-			<input type="text" id="title-input" class="title-input" placeholder="Title" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()" onkeydown="titleKeyDown(event)" />
+			<input type="text" id="title-input" class="title-input" data-l10n-placeholder="titlePlaceholder" readonly="" oninput="saveCurrentNote()" onkeydown="titleKeyDown(event)" />
 			<div class="note-controls">
-				<button id="edit-btn" class="icon-btn" title="Edit" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
-				<button id="delete-btn" class="icon-btn" title="Delete" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
-				<button id="close-btn" class="icon-btn" title="Close" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+				<button id="edit-btn" class="icon-btn" data-l10n-title="edit" onclick="toggleEdit()"><svg class="ic-edit" viewBox="0 0 24 24"><path d="M15.5 4.5l4 4L9 19l-5 1 1-5z"></path><path d="M13.5 6.5l4 4"></path></svg><svg class="ic-done" viewBox="0 0 24 24"><path d="M4.5 12.5l5 5 10-11"></path></svg></button>
+				<button id="delete-btn" class="icon-btn" data-l10n-title="delete" onclick="deleteCurrentNote()"><svg viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 13h9l1-13M10 10.5v6M14 10.5v6"></path></svg></button>
+				<button id="close-btn" class="icon-btn" data-l10n-title="close" onclick="closeNote()"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 			</div>
 		</div>
-		<div class="note-sub" id="note-sub"> </div>
-		<textarea id="editor" placeholder="Write markdown, #tags, and [[WikiLinks]]..." data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()"> </textarea>
-		<div id="viewer"> </div>
+		<div class="note-sub" id="note-sub">·</div>
+		<textarea id="editor" data-l10n-placeholder="editorPlaceholder" oninput="saveCurrentNote()">·</textarea>
+		<div id="viewer">·</div>
 	</div>
-	<div class="visits" id="visits"> </div>
+	<div class="visits" id="visits">·</div>
 </main>
 <aside id="sidebar">
 	<div class="page-controls">
 		<div class="page-icons">
-			<button class="icon-btn" title="New note" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
-			<button id="settings-btn" class="icon-btn" title="Settings" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+			<button class="icon-btn" data-l10n-title="newNote" onclick="createNewNote()"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"></path></svg></button>
+			<button id="settings-btn" class="icon-btn" data-l10n-title="settings" onclick="toggleSettings()"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
 		</div>
-		<button id="export-btn" class="btn export-btn" title="Download this wiki as HTML" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">Save</button>
+		<button id="export-btn" class="btn export-btn" data-l10n="export" data-l10n-title="exportHint" onclick="downloadSelf()">·</button>
 	</div>
 	<form id="settings-panel" class="settings" hidden="" onchange="readSettingsForm()" onsubmit="return false">
-		<label class="check"><input type="checkbox" name="showTags" /><span data-l10n="showTags">Show tags filter</span></label>
-		<label class="check"><input type="checkbox" name="showSearch" /><span data-l10n="showSearch">Show search</span></label>
-		<label><span data-l10n="sortBy">Sort notes by</span>
-			<select name="sort"><option value="date" data-l10n="sortDate">Date</option><option value="title" data-l10n="sortTitle">Title</option></select></label>
-		<label><span data-l10n="sortOrder">Order</span>
-			<select name="order"><option value="desc" data-l10n="orderDesc">Descending</option><option value="asc" data-l10n="orderAsc">Ascending</option></select></label>
-		<label><span data-l10n="visitsPlace">Recent visits</span>
-			<select name="visitsPlace"><option value="below" data-l10n="placeBelow">Below note</option><option value="above" data-l10n="placeAbove">Above note</option></select></label>
-		<label><span data-l10n="visitsCap">Recent visits to keep</span>
+		<label class="check"><input type="checkbox" name="showTags" /><span data-l10n="showTags">·</span></label>
+		<label class="check"><input type="checkbox" name="showSearch" /><span data-l10n="showSearch">·</span></label>
+		<label><span data-l10n="sortBy">·</span>
+			<select name="sort"><option value="date" data-l10n="sortDate">·</option><option value="title" data-l10n="sortTitle">·</option></select></label>
+		<label><span data-l10n="sortOrder">·</span>
+			<select name="order"><option value="desc" data-l10n="orderDesc">·</option><option value="asc" data-l10n="orderAsc">·</option></select></label>
+		<label><span data-l10n="visitsPlace">·</span>
+			<select name="visitsPlace"><option value="below" data-l10n="placeBelow">·</option><option value="above" data-l10n="placeAbove">·</option></select></label>
+		<label><span data-l10n="visitsCap">·</span>
 			<input type="number" name="visitsCap" min="1" max="100" /></label>
-		<label class="wide"><span data-l10n="newTitleFormat">New note title</span>
+		<label class="wide"><span data-l10n="newTitleFormat">·</span>
 			<input type="text" name="newTitle" /></label>
-		<label class="wide"><span data-l10n="dateFormat">Date format</span>
-			<input type="text" name="dateFormat" placeholder="Browser default" data-l10n-placeholder="dateFormatHint" /></label>
-		<div class="hint" data-l10n="formatHelp">Placeholders: {YYYY} {MM} {DD} {H} {M} {S}</div>
+		<label class="wide"><span data-l10n="dateFormat">·</span>
+			<input type="text" name="dateFormat" data-l10n-placeholder="dateFormatHint" /></label>
+		<div class="hint" data-l10n="formatHelp">·</div>
 		<div class="io">
-			<button type="button" class="btn" data-l10n="importJson" onclick="document.getElementById('import-file').click()">Import JSON</button>
-			<button type="button" class="btn" data-l10n="exportJson" onclick="exportJson()">Export JSON</button>
+			<button type="button" class="btn" data-l10n="importJson" onclick="document.getElementById('import-file').click()">·</button>
+			<button type="button" class="btn" data-l10n="exportJson" onclick="exportJson()">·</button>
 		</div>
 	</form>
 	<input type="file" id="import-file" accept=".json,application/json" hidden="" onchange="importJsonFile(this)" />
-	<input type="text" id="search" placeholder="Search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()" />
-	<div class="tag-cloud" id="tag-cloud"> </div>
-	<ul id="note-list"> </ul>
-	<div class="footer" data-l10n="footer">© 2026 DifflyWiki. MIT License</div>
+	<input type="text" id="search" data-l10n-placeholder="searchPlaceholder" oninput="renderList()" />
+	<div class="tag-cloud" id="tag-cloud">·</div>
+	<ul id="note-list">·</ul>
+	<div class="footer" data-l10n-html="footer">·</div>
 </aside>
 
 <script>//<![CDATA[
@@ -198,8 +199,7 @@ Link your main notes here
 	// English text in the HTML below is only a fallback and is replaced on load.
 	const STRINGS = {
 		lang: 'en',
-		appTitle: 'DifflyWiki',
-		footer: '© 2026 DifflyWiki. MIT License',
+		footer: '© 2026 <a href="https://github.com/IPv6/DifflyWiki" target="_blank" rel="noopener">DifflyWiki</a>. MIT License', // HTML
 		titlePlaceholder: 'Title',
 		editorPlaceholder: 'Write markdown, #tags, and [[WikiLinks]]...',
 		searchPlaceholder: 'Search',
@@ -251,12 +251,14 @@ Link your main notes here
 	const t = (key, vars = {}) =>
 		(STRINGS[key] ?? key).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
 
-	// Fills HTML marked with data-l10n (text), data-l10n-title, data-l10n-placeholder.
+	// Fills HTML marked with data-l10n (text), data-l10n-html (markup), data-l10n-title,
+	// data-l10n-placeholder. The HTML itself holds no text for them (a "·" at most: XML tools
+	// would write an empty element as <div/>, which HTML reads as an open tag).
 	// Runs after the export snapshot is taken, so saved files keep the keys, not the text.
 	function applyStrings() {
 		document.documentElement.lang = STRINGS.lang;
-		document.title = t('appTitle');
 		document.querySelectorAll('[data-l10n]').forEach(el => { el.textContent = t(el.dataset.l10n); });
+		document.querySelectorAll('[data-l10n-html]').forEach(el => { el.innerHTML = t(el.dataset.l10nHtml); });
 		for (const attr of ['title', 'placeholder']) {
 			document.querySelectorAll(`[data-l10n-${attr}]`)
 				.forEach(el => el.setAttribute(attr, t(el.getAttribute(`data-l10n-${attr}`))));
@@ -909,11 +911,11 @@ Link your main notes here
 	// then writes the wiki into its own window, so $tw may already exist: it is extended,
 	// not replaced. TiddlyStow v2 serves the file from a URL and saves it on HTTP PUT.
 	{
-		window.version = { title: t('appTitle') };
+		window.version = { title: document.title };
 		// Palette lookup: page-background colours Tiddloid's toolbar like the page
 		const TW_TEXT = {
 			// App title bar: the index note's title, and its text as plain words, clipped
-			'$:/SiteTitle': () => indexNote()?.title || t('appTitle'),
+			'$:/SiteTitle': () => indexNote()?.title || document.title,
 			'$:/SiteSubtitle': () => clip(plainText(indexNote()?.content || ''), VISIT_TITLE_MAX),
 			'$:/config/Tiddloid/ApplyTheme': () => 'yes',
 			'$:/palette': () => '$:/palettes/Diffly',
